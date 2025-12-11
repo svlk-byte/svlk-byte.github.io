@@ -11,6 +11,21 @@
 :root {
     --scale-factor: 1;
     --dynamic-scale: 1;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 body {
@@ -24,6 +39,18 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove any potential scrollbars */
+body::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Themes */
@@ -37,21 +64,26 @@ body {
     color: #333;
 }
 
-/* Game Container */
+/* Game Container - FULL SCREEN */
 .game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
-    position: relative;
     transform: scale(var(--dynamic-scale));
     transform-origin: top center;
     transition: transform 0.3s ease;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 /* Top Bar */
 .top-bar {
     display: flex;
     justify-content: space-between;
-    padding: 15px 20px;
+    padding: max(15px, var(--safe-area-top)) max(20px, var(--safe-area-left)) 15px max(20px, var(--safe-area-right));
     position: absolute;
     top: 0;
     left: 0;
@@ -59,15 +91,22 @@ body {
     z-index: 1000;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    height: auto;
+    min-height: 80px;
 }
 
 .top-left {
     display: flex;
     gap: 15px;
+    align-items: center;
 }
 
 .top-right {
     text-align: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .menu-btn {
@@ -83,6 +122,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .menu-btn:hover, .menu-btn:active {
@@ -91,53 +131,43 @@ body {
 }
 
 .counter {
-    font-size: 2.5rem;
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
     font-weight: bold;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     color: #ffd700;
     margin-bottom: 5px;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
 }
 
 .combo-counter {
-    font-size: 1.2rem;
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
     color: #ff6b6b;
     font-weight: 600;
+    line-height: 1.2;
 }
 
-/* Clicker Area */
+/* Main Clicker Button - TRUE FULL SCREEN */
 .clicker-area {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     z-index: 1;
     pointer-events: none;
-}
-
-.screen-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.4) 0%,
-        rgba(0, 0, 0, 0.2) 20%,
-        rgba(0, 0, 0, 0.1) 50%,
-        rgba(0, 0, 0, 0.2) 80%,
-        rgba(0, 0, 0, 0.4) 100%
-    );
-    pointer-events: none;
-    z-index: 2;
+    margin: 0;
+    padding: 0;
 }
 
 .clicker-button {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     background-size: cover;
     background-position: center;
@@ -151,6 +181,7 @@ body {
     z-index: 3;
     padding: 0;
     margin: 0;
+    display: block;
 }
 
 /* Default skin background */
@@ -162,10 +193,29 @@ body {
     transform: scale(0.99);
 }
 
-.click-feedback {
-    position: absolute;
+/* Visual overlay for better text visibility */
+.screen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.6) 0%,
+        rgba(0, 0, 0, 0.3) 20%,
+        rgba(0, 0, 0, 0.15) 50%,
+        rgba(0, 0, 0, 0.3) 80%,
+        rgba(0, 0, 0, 0.6) 100%
+    );
     pointer-events: none;
-    font-size: 1.8rem;
+    z-index: 2;
+}
+
+.click-feedback {
+    position: fixed;
+    pointer-events: none;
+    font-size: clamp(1.5rem, 4vw, 1.8rem);
     font-weight: bold;
     color: #ffd700;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
@@ -188,7 +238,7 @@ body {
 .bottom-bar {
     display: flex;
     justify-content: space-between;
-    padding: 20px;
+    padding: 15px max(20px, var(--safe-area-left)) max(20px, var(--safe-area-bottom)) max(20px, var(--safe-area-right));
     position: absolute;
     bottom: 0;
     left: 0;
@@ -196,6 +246,9 @@ body {
     z-index: 1000;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    height: auto;
+    min-height: 150px;
 }
 
 .upgrade-container {
@@ -203,31 +256,35 @@ body {
     flex-direction: column;
     align-items: center;
     width: 45%;
+    min-width: 120px;
 }
 
 .upgrade-info {
     text-align: center;
     margin-bottom: 10px;
-    font-size: 1.1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
     background: rgba(0, 0, 0, 0.5);
-    padding: 8px 15px;
+    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 15px);
     border-radius: 20px;
     width: 100%;
+    max-width: 200px;
 }
 
 .upgrade-cost {
     color: #ff6b6b;
     font-weight: 600;
+    line-height: 1.2;
 }
 
 .upgrade-level {
     color: #4ecdc4;
     font-weight: 600;
+    line-height: 1.2;
 }
 
 .upgrade-btn {
-    width: 120px;
-    height: 120px;
+    width: clamp(80px, 20vw, 120px);
+    height: clamp(80px, 20vw, 120px);
     border-radius: 50%;
     border: none;
     cursor: pointer;
@@ -235,6 +292,7 @@ body {
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.3s;
     padding: 0;
+    flex-shrink: 0;
 }
 
 .upgrade-btn img {
@@ -250,10 +308,11 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.2rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
     font-weight: bold;
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
     z-index: 2;
+    white-space: nowrap;
 }
 
 .upgrade-normal-btn {
@@ -282,28 +341,30 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
     z-index: 2000;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: max(20px, var(--safe-area-top)) max(20px, var(--safe-area-left)) max(20px, var(--safe-area-bottom)) max(20px, var(--safe-area-right));
+    margin: 0;
 }
 
 .modal-content {
     background: var(--modal-bg);
     border-radius: 20px;
-    max-width: 500px;
+    max-width: min(500px, 90vw);
     width: 100%;
-    max-height: 80vh;
+    max-height: min(80vh, calc(100vh - 40px));
     overflow-y: auto;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    margin: 0;
 }
 
 .wide-modal {
-    max-width: 800px;
+    max-width: min(800px, 95vw);
 }
 
 .night-theme .modal-content {
@@ -322,6 +383,10 @@ body {
     align-items: center;
     padding: 20px;
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    background: inherit;
+    z-index: 1;
 }
 
 .light-theme .modal-header {
@@ -330,7 +395,7 @@ body {
 
 .modal-header h2 {
     margin: 0;
-    font-size: 1.8rem;
+    font-size: clamp(1.5rem, 4vw, 1.8rem);
     color: inherit;
 }
 
@@ -347,6 +412,7 @@ body {
     justify-content: center;
     border-radius: 50%;
     transition: background-color 0.2s;
+    flex-shrink: 0;
 }
 
 .close-modal:hover {
@@ -359,6 +425,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -375,6 +443,8 @@ body {
     justify-content: space-between;
     align-items: center;
     transition: background-color 0.2s;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .light-theme .shop-item {
@@ -391,22 +461,24 @@ body {
 
 .shop-item-info {
     flex: 1;
+    min-width: 200px;
 }
 
 .shop-item-name {
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 3vw, 1.1rem);
     margin-bottom: 5px;
 }
 
 .shop-item-cost {
     color: #ffd700;
     font-weight: 600;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 .shop-item-qty {
     color: #4ecdc4;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
 }
 
 .buy-btn {
@@ -419,6 +491,7 @@ body {
     font-weight: 600;
     transition: transform 0.2s;
     min-width: 100px;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 .buy-btn:hover:not(:disabled) {
@@ -446,6 +519,10 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     border: 2px solid transparent;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .light-theme .skin-item {
@@ -476,20 +553,23 @@ body {
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 10px;
+    margin: 0 auto 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
 }
 
 .skin-name {
     font-weight: 600;
     margin-bottom: 5px;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+    line-height: 1.2;
+    word-break: break-word;
 }
 
 .skin-cost {
     color: #ffd700;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
 }
 
 /* Settings Styles */
@@ -505,17 +585,18 @@ body {
     display: block;
     margin-bottom: 5px;
     font-weight: 600;
+    font-size: clamp(1rem, 3vw, 1.1rem);
 }
 
 .setting-option select,
 .setting-option textarea {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.1);
     color: inherit;
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
     resize: vertical;
     min-height: 100px;
 }
@@ -528,7 +609,7 @@ body {
 
 .setting-option textarea {
     font-family: monospace;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
 }
 
 .action-btn {
@@ -542,6 +623,7 @@ body {
     transition: transform 0.2s;
     width: calc(50% - 5px);
     margin-right: 10px;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 .action-btn:last-child {
@@ -562,6 +644,7 @@ body {
     font-weight: 600;
     transition: transform 0.2s;
     width: 100%;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 .danger-btn:hover {
@@ -575,6 +658,8 @@ body {
     align-items: center;
     padding: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .page-btn {
@@ -590,6 +675,7 @@ body {
     color: inherit;
     font-size: 1.2rem;
     transition: background-color 0.2s;
+    flex-shrink: 0;
 }
 
 .page-btn:hover:not(:disabled) {
@@ -602,8 +688,11 @@ body {
 }
 
 #shopPage, #skinsPage {
-    margin: 0 20px;
+    margin: 0 10px;
     font-weight: 600;
+    font-size: clamp(1rem, 3vw, 1.1rem);
+    min-width: 80px;
+    text-align: center;
 }
 
 /* Small buttons */
@@ -614,8 +703,9 @@ body {
     padding: 8px 15px;
     border-radius: 20px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .small-btn:hover:not(:disabled) {
@@ -652,6 +742,7 @@ body {
     background: rgba(255, 255, 255, 0.1);
     color: inherit;
     margin-bottom: 8px;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 .admin-field button {
@@ -661,7 +752,7 @@ body {
     padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
     width: 100%;
     margin-top: 5px;
 }
@@ -675,21 +766,22 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
     z-index: 3000;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: max(20px, var(--safe-area-top)) max(20px, var(--safe-area-left)) max(20px, var(--safe-area-bottom)) max(20px, var(--safe-area-right));
 }
 
 .tutorial-step {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     padding: 30px;
     border-radius: 20px;
-    max-width: 500px;
-    width: 90%;
+    max-width: min(500px, 90vw);
+    width: 100%;
     text-align: center;
     border: 3px solid #4a4a8a;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
@@ -698,13 +790,13 @@ body {
 .tutorial-step h3 {
     color: #ffd700;
     margin-bottom: 15px;
-    font-size: 1.8rem;
+    font-size: clamp(1.5rem, 4vw, 1.8rem);
 }
 
 .tutorial-step p {
     color: #e0e0e0;
     margin-bottom: 25px;
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 3vw, 1.2rem);
     line-height: 1.5;
 }
 
@@ -723,7 +815,7 @@ body {
     border-radius: 25px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 3vw, 1.1rem);
     transition: transform 0.2s;
     min-width: 120px;
 }
@@ -742,184 +834,12 @@ body {
     font-weight: 600;
     transition: all 0.2s;
     min-width: 120px;
+    font-size: clamp(1rem, 3vw, 1.1rem);
 }
 
 .tutorial-skip:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
-}
-
-/* Responsive Design for Small Phones */
-@media (max-height: 700px) {
-    .top-bar {
-        padding: 12px 16px;
-    }
-    
-    .counter {
-        font-size: 2rem;
-    }
-    
-    .combo-counter {
-        font-size: 1rem;
-    }
-    
-    .menu-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1.3rem;
-    }
-    
-    .upgrade-btn {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .upgrade-btn span {
-        font-size: 1rem;
-    }
-    
-    .upgrade-info {
-        font-size: 1rem;
-        padding: 6px 12px;
-    }
-    
-    .bottom-bar {
-        padding: 15px;
-    }
-    
-    .modal-content {
-        max-height: 85vh;
-    }
-}
-
-@media (max-height: 600px) {
-    .top-bar {
-        padding: 10px 14px;
-    }
-    
-    .counter {
-        font-size: 1.8rem;
-    }
-    
-    .combo-counter {
-        font-size: 0.9rem;
-    }
-    
-    .menu-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-    }
-    
-    .upgrade-btn {
-        width: 90px;
-        height: 90px;
-    }
-    
-    .upgrade-btn span {
-        font-size: 0.9rem;
-    }
-    
-    .upgrade-info {
-        font-size: 0.9rem;
-        padding: 5px 10px;
-    }
-    
-    .bottom-bar {
-        padding: 12px;
-    }
-    
-    .skins-container {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        padding: 15px;
-        gap: 12px;
-    }
-    
-    .skin-item {
-        padding: 12px;
-    }
-    
-    .skin-image {
-        width: 70px;
-        height: 70px;
-    }
-    
-    .shop-items {
-        padding: 15px;
-    }
-    
-    .shop-item {
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-}
-
-@media (max-height: 500px) {
-    .top-bar {
-        padding: 8px 12px;
-    }
-    
-    .counter {
-        font-size: 1.6rem;
-    }
-    
-    .combo-counter {
-        font-size: 0.8rem;
-    }
-    
-    .menu-btn {
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
-    }
-    
-    .upgrade-btn {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .upgrade-btn span {
-        font-size: 0.8rem;
-    }
-    
-    .upgrade-info {
-        font-size: 0.8rem;
-        padding: 4px 8px;
-        border-radius: 15px;
-    }
-    
-    .bottom-bar {
-        padding: 10px;
-    }
-    
-    .click-feedback {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .skins-container {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    }
-    
-    .skin-image {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .skin-name {
-        font-size: 0.8rem;
-    }
-    
-    .action-btn {
-        width: 100%;
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-    
-    .action-btn:last-child {
-        margin-bottom: 0;
-    }
 }
 
 /* Scrollbar Styling */
@@ -947,4 +867,158 @@ body {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+/* Fix for mobile browsers */
+@supports (-webkit-touch-callout: none) {
+    .game-container {
+        height: -webkit-fill-available;
+    }
+    
+    .clicker-button {
+        height: -webkit-fill-available;
+    }
+}
+
+/* Very small phone optimization */
+@media (max-height: 600px) and (orientation: portrait) {
+    .top-bar {
+        padding: 8px 12px;
+        min-height: 60px;
+    }
+    
+    .menu-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .counter {
+        font-size: 1.5rem;
+    }
+    
+    .combo-counter {
+        font-size: 0.8rem;
+    }
+    
+    .bottom-bar {
+        padding: 8px 12px;
+        min-height: 120px;
+    }
+    
+    .upgrade-btn {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .upgrade-btn span {
+        font-size: 0.8rem;
+    }
+    
+    .upgrade-info {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+        border-radius: 15px;
+    }
+    
+    .modal-content {
+        max-height: 90vh;
+    }
+    
+    .skins-container {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .skin-item {
+        padding: 10px;
+        min-height: 130px;
+    }
+    
+    .skin-image {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+    .top-bar {
+        padding: 5px 10px;
+        min-height: 50px;
+    }
+    
+    .bottom-bar {
+        padding: 5px 10px;
+        min-height: 100px;
+    }
+    
+    .upgrade-btn {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .upgrade-btn span {
+        font-size: 0.7rem;
+    }
+    
+    .upgrade-info {
+        font-size: 0.7rem;
+        padding: 4px 6px;
+        margin-bottom: 5px;
+    }
+    
+    .counter {
+        font-size: 1.3rem;
+    }
+    
+    .combo-counter {
+        font-size: 0.7rem;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 320px) {
+    .skins-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .action-btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .shop-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .shop-item-info {
+        min-width: auto;
+    }
+}
+
+/* Prevent zoom on mobile input */
+@media screen and (max-width: 767px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Fix for notch phones */
+@supports (padding: max(0px)) {
+    .top-bar, .bottom-bar, .modal {
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+    }
+    
+    .top-bar {
+        padding-top: max(15px, env(safe-area-inset-top));
+    }
+    
+    .bottom-bar {
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
 }
