@@ -495,4 +495,291 @@ function updateSkinsUI() {
             <div class="skin-cost">${skin.cost === 0 ? 'FREE' : formatNumber(skin.cost)}</div>
         `;
         
-        if (gameData.unlockedSki
+        if (gameData.unlockedSkins.includes(skinIndex)) {
+            skinElement.addEventListener('click', () => equipSkin(skinIndex));
+        } else {
+            skinElement.addEventListener('click', () => unlockSkin(skinIndex));
+        }
+        
+        elements.skinsContainer.appendChild(skinElement);
+    });
+    
+    // Update pagination
+    elements.skinsPage.textContent = `Page ${gameData.skinsPage + 1}`;
+    elements.skinsPrev.disabled = gameData.skinsPage === 0;
+    elements.skinsNext.disabled = endIndex >= skins.length;
+}
+
+function equipSkin(index) {
+    if (gameData.unlockedSkins.includes(index)) {
+        gameData.equippedSkin = index;
+        elements.currentSkin.src = skins[index].skin;
+        updateSound();
+        updateSkinsUI();
+        saveGameData();
+    }
+}
+
+function unlockSkin(index) {
+    const skin = skins[index];
+    if (gameData.count >= skin.cost) {
+        gameData.count -= skin.cost;
+        gameData.unlockedSkins.push(index);
+        equipSkin(index);
+        updateUI();
+        saveGameData();
+    }
+}
+
+function changeSkinsPage(delta) {
+    const newPage = gameData.skinsPage + delta;
+    const maxPage = Math.ceil(skins.length / ITEMS_PER_PAGE) - 1;
+    
+    if (newPage >= 0 && newPage <= maxPage) {
+        gameData.skinsPage = newPage;
+        updateSkinsUI();
+    }
+}
+
+// Update UI
+function updateUI() {
+    // Format numbers with commas
+    elements.coinCounter.textContent = formatNumber(gameData.count);
+    elements.comboCounter.textContent = `Combo: ${gameData.clickCombo}x${getComboMultiplier().toFixed(1)}`;
+    
+    // Update upgrade button
+    elements.upgradeCost.textContent = `Cost: ${formatNumber(gameData.upgradeCost)}`;
+    elements.upgradeLevel.textContent = `Level: ${gameData.upgradeLevel}`;
+    elements.upgradeBtn.disabled = gameData.count < gameData.upgradeCost;
+    
+    // Update rebirth button
+    elements.rebirthCost.textContent = `Cost: ${formatNumber(gameData.rebirthCost)}`;
+    elements.rebirthLevel.textContent = `Rebirths: ${gameData.rebirths}`;
+    elements.rebirthBtn.disabled = gameData.count < gameData.rebirthCost;
+    
+    // Update other UI elements
+    updateShopTimer();
+    updateShopUI();
+}
+
+// Format Numbers
+function formatNumber(num) {
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    return Math.floor(num).toString();
+}
+
+// Start Coins Per Second
+function startCoinsPerSec() {
+    if (coinsPerSecInterval) clearInterval(coinsPerSecInterval);
+    
+    coinsPerSecInterval = setInterval(() => {
+        if (gameData.coinsPerSec > 0) {
+            let coinsEarned = gameData.coinsPerSec;
+            
+            // Apply rebirth multiplier
+            const rebirthMultiplier = 1 + (gameData.rebirths * 0.5);
+            coinsEarned *= rebirthMultiplier;
+            
+            // Apply temporary boosts
+            if (gameData.tempBoosts.coinsPerSec) {
+                coinsEarned *= gameData.tempBoosts.coinsPerSec.multiplier;
+            }
+            
+            gameData.count += Math.floor(coinsEarned);
+            gameData.totalCoinsEarned += Math.floor(coinsEarned);
+            
+            updateUI();
+            saveGameData();
+        }
+    }, 1000);
+}
+
+// Show Modal
+function showModal(modalId) {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+    });
+    
+    document.getElementById(modalId).style.display = 'flex';
+}
+
+// Theme Handling
+function handleThemeChange() {
+    const theme = elements.themeSelect.value;
+    document.body.className = theme + '-theme';
+    gameData.theme = theme;
+    saveGameData();
+}
+
+// Save System
+function saveGameData() {
+    localStorage.setItem('svlkClickerSave', JSON.stringify(gameData));
+}
+
+function loadGameData() {
+    const saved = localStorage.getItem('svlkClickerSave');
+    if (saved) {
+        const loaded = JSON.parse(saved);
+        Object.assign(gameData, loaded);
+        
+        // Apply theme
+        document.body.className = gameData.theme + '-theme';
+        elements.themeSelect.value = gameData.theme;
+        
+        // Load current skin
+        if (skins[gameData.equippedSkin]) {
+            elements.currentSkin.src = skins[gameData.equippedSkin].skin;
+            updateSound();
+        }
+    }
+}
+
+function exportSave() {
+    const saveData = JSON.stringify(gameData);
+    elements.exportSaveText.value = btoa(saveData);
+}
+
+function importSave() {
+    try {
+        const saveData = atob(elements.importSaveText.value);
+        const loaded = JSON.parse(saveData);
+        Object.assign(gameData, loaded);
+        
+        // Apply theme
+        document.body.className = gameData.theme + '-theme';
+        elements.themeSelect.value = gameData.theme;
+        
+        // Load skin
+        if (skins[gameData.equippedSkin]) {
+            elements.currentSkin.src = skins[gameData.equippedSkin].skin;
+            updateSound();
+        }
+        
+        updateUI();
+        generateShopItems();
+        saveGameData();
+        alert('Save imported successfully!');
+    } catch (error) {
+        alert('Invalid save data!');
+    }
+}
+
+function resetGame() {
+    if (confirm('Are you sure you want to reset the game? All progress will be lost!')) {
+        localStorage.removeItem('svlkClickerSave');
+        location.reload();
+    }
+}
+
+// Admin Panel
+function startAdminHold() {
+    adminHoldTimeout = setTimeout(() => {
+        isAdminHold = true;
+        showModal('adminModal');
+    }, 5000);
+}
+
+function cancelAdminHold() {
+    clearTimeout(adminHoldTimeout);
+}
+
+function setupAdminPanel() {
+    const adminFields = [
+        { id: 'adminCoins', placeholder: 'Coins', setter: (val) => gameData.count = Number(val) },
+        { id: 'adminCoinsPerClick', placeholder: 'Coins Per Click', setter: (val) => gameData.coinsPerClick = Number(val) },
+        { id: 'adminUpgrades', placeholder: 'Upgrade Level', setter: (val) => gameData.upgradeLevel = Number(val) },
+        { id: 'adminUpgradeCost', placeholder: 'Upgrade Cost', setter: (val) => gameData.upgradeCost = Number(val) },
+        { id: 'adminRebirths', placeholder: 'Rebirths', setter: (val) => gameData.rebirths = Number(val) },
+        { id: 'adminRebirthCost', placeholder: 'Rebirth Cost', setter: (val) => gameData.rebirthCost = Number(val) },
+        { id: 'adminComboBoost', placeholder: 'Combo Boost', setter: (val) => gameData.comboBoost = Number(val) },
+        { id: 'adminCoinsPerSec', placeholder: 'Coins/sec', setter: (val) => gameData.coinsPerSec = Number(val) },
+    ];
+    
+    adminFields.forEach(field => {
+        const fieldElement = document.createElement('div');
+        fieldElement.className = 'admin-field';
+        
+        fieldElement.innerHTML = `
+            <input type="number" id="${field.id}" placeholder="${field.placeholder}">
+            <button class="admin-set-btn">Set</button>
+        `;
+        
+        const setBtn = fieldElement.querySelector('.admin-set-btn');
+        const input = fieldElement.querySelector('input');
+        
+        setBtn.addEventListener('click', () => {
+            field.setter(input.value);
+            updateUI();
+            saveGameData();
+            input.value = '';
+        });
+        
+        elements.adminContainer.appendChild(fieldElement);
+    });
+    
+    // Add utility buttons
+    const utilityButtons = [
+        { id: 'unlockAllSkins', text: 'Unlock All Skins', action: () => {
+            gameData.unlockedSkins = Array.from({ length: skins.length }, (_, i) => i);
+            saveGameData();
+        }},
+        { id: 'forceShopRefresh', text: 'Force Shop Refresh', action: () => {
+            gameData.lastShopRefresh = 0;
+            generateShopItems();
+        }},
+        { id: 'give1MCoins', text: 'Give 1M Coins', action: () => {
+            gameData.count += 1000000;
+            updateUI();
+            saveGameData();
+        }},
+        { id: 'resetTempBoosts', text: 'Reset Temp Boosts', action: () => {
+            gameData.tempBoosts = {};
+            saveGameData();
+        }}
+    ];
+    
+    utilityButtons.forEach(button => {
+        const buttonElement = document.createElement('div');
+        buttonElement.className = 'admin-field';
+        
+        buttonElement.innerHTML = `<button class="admin-action-btn">${button.text}</button>`;
+        
+        buttonElement.querySelector('button').addEventListener('click', button.action);
+        
+        elements.adminContainer.appendChild(buttonElement);
+    });
+}
+
+// Tutorial
+function showTutorial() {
+    elements.tutorialOverlay.style.display = 'flex';
+    document.getElementById('tutorialStep1').style.display = 'block';
+}
+
+function nextTutorialStep() {
+    const steps = document.querySelectorAll('.tutorial-step');
+    let currentStep = -1;
+    
+    steps.forEach((step, index) => {
+        if (step.style.display === 'block') {
+            currentStep = index;
+            step.style.display = 'none';
+        }
+    });
+    
+    if (currentStep < steps.length - 1) {
+        steps[currentStep + 1].style.display = 'block';
+    } else {
+        elements.tutorialOverlay.style.display = 'none';
+        isInitialized = true;
+    }
+}
+
+// Initialize game when DOM is loaded
+document.addEventListener('DOMContentLoaded', initGame);
+
+// Auto-save every 30 seconds
+setInterval(saveGameData, 30000);
