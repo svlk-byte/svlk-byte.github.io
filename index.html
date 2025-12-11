@@ -1,119 +1,176 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SndTagXClicker</title>
+    <title>Svlk-Byte Clicker</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <button id="mainButton"></button>
-    <div id="clickArea">
-        <img id="coinIcon" alt="Coin">
-        <span id="coinCount">0</span>
-    </div>
-    <div id="levelDisplay">Level: 0</div>
-    <div id="comboCounter">Combo: 0x</div>
-    <div id="upgradeCountLabel">Count: 0</div>
-    <div id="upgradeCostLabel">Cost: 10</div>
-    <button id="upgradeButton">Upgrade</button>
-    <div id="rebirthCountLabel">Count: 0</div>
-    <div id="rebirthCostLabel">Cost: 1000000</div>
-    <button id="rebirthButton">Rebirth</button>
-    <button id="skinPanelToggle">S<div id="skinNotification" class="notification" style="display: none;"></div></button>
-    <button id="achievementsToggle">A<div id="achievementsNotification" class="notification" style="display: none;"></div></button>
-    <button id="dailyRewardsToggle">D<div id="dailyNotification" class="notification" style="display: none;"></div></button>
-    <button id="settingsToggle">⚙</button>
-    <button id="shopToggle">P<div id="shopNotification" class="notification" style="display: none;"></div></button>
-    <div id="skinPanel" class="panel">
-        <div id="skinPages"></div>
-        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 10px;">
-            <button id="prevPage">Previous</button>
-            <span id="pageIndicator"></span>
-            <button id="nextPage">Next</button>
+<body class="night-theme">
+    <!-- Main Game Interface -->
+    <div class="game-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <!-- Left side buttons -->
+            <div class="top-left">
+                <button id="shopBtn" class="menu-btn" title="Shop">
+                    <i class="fas fa-store"></i>
+                </button>
+                <button id="skinsBtn" class="menu-btn" title="Skins">
+                    <i class="fas fa-palette"></i>
+                </button>
+                <button id="settingsBtn" class="menu-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            
+            <!-- Right side counters -->
+            <div class="top-right">
+                <div class="counter" id="coinCounter">0</div>
+                <div class="combo-counter" id="comboCounter">Combo: 0x</div>
+            </div>
         </div>
-    </div>
-    <div id="achievementsPanel" class="panel">
-        <div id="achievementPages"></div>
-        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 10px;">
-            <button id="achPrevPage">Previous</button>
-            <span id="achPageIndicator"></span>
-            <button id="achNextPage">Next</button>
+        
+        <!-- Main Clicker Button -->
+        <div class="clicker-area">
+            <button id="mainClicker" class="clicker-button">
+                <img id="currentSkin" src="Skins/SvetlanaSkin.jpg" alt="Clicker Skin">
+            </button>
+            <div class="click-feedback" id="clickFeedback"></div>
         </div>
-    </div>
-    <div id="dailyRewardsPanel" class="panel"></div>
-    <div id="settingsPanel" class="panel">
-        <h2>Settings</h2>
-        <div id="settingsContent">
-            <div class="setting-option">
-                <label>Debug Mode: </label>
-                <input type="checkbox" id="debugToggle">
+        
+        <!-- Bottom Bar -->
+        <div class="bottom-bar">
+            <!-- Left side - Rebirth -->
+            <div class="upgrade-container left">
+                <div class="upgrade-info">
+                    <div class="upgrade-cost" id="rebirthCost">Cost: 1000</div>
+                    <div class="upgrade-level" id="rebirthLevel">Rebirths: 0</div>
+                </div>
+                <button id="rebirthBtn" class="upgrade-btn rebirth-btn">
+                    <img src="Skins/SvetlanaSkin.jpg" alt="Rebirth">
+                    <span>REBIRTH</span>
+                </button>
             </div>
-            <div id="debugStats" style="display: none; font-size: 12px; margin-top: 5px;"></div>
-            <div class="setting-option">
-                <label>Theme: </label>
-                <select id="themeSelect">
-                    <option value="light">Light</option>
-                    <option value="night">Night</option>
-                </select>
-            </div>
-            <div class="setting-option">
-                <button id="exportSave">Export Save</button>
-                <button id="importSave">Import Save</button>
-                <button id="resetGame">Reset Game</button>
-            </div>
-            <div class="setting-option">
-                <textarea id="exportSaveText" placeholder="Your save code will appear here" readonly></textarea>
-            </div>
-            <div class="setting-option">
-                <textarea id="importSaveText" placeholder="Paste save code here"></textarea>
+            
+            <!-- Right side - Upgrade -->
+            <div class="upgrade-container right">
+                <div class="upgrade-info">
+                    <div class="upgrade-cost" id="upgradeCost">Cost: 10</div>
+                    <div class="upgrade-level" id="upgradeLevel">Level: 0</div>
+                </div>
+                <button id="upgradeBtn" class="upgrade-btn upgrade-normal-btn">
+                    <img src="Skins/SvetlanaSkin.jpg" alt="Upgrade">
+                    <span>UPGRADE</span>
+                </button>
             </div>
         </div>
     </div>
-    <div id="shopPanel" class="panel">
-        <div id="shopTimer">Refresh in: 10:00</div>
-        <div id="shopPages"></div>
-        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 10px;">
-            <button id="shopPrevPage">Previous</button>
-            <span id="shopPageIndicator"></span>
-            <button id="shopNextPage">Next</button>
+    
+    <!-- Modals -->
+    <div id="shopModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Shop</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="shop-info">
+                <div>Refreshes in: <span id="shopTimer">10:00</span></div>
+                <button id="refreshShop" class="small-btn">Force Refresh (1000 coins)</button>
+            </div>
+            <div class="shop-items" id="shopItems"></div>
+            <div class="pagination">
+                <button id="shopPrev" class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                <span id="shopPage">Page 1</span>
+                <button id="shopNext" class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
         </div>
     </div>
-    <div id="adminPanel">
-        <h2>Admin Panel</h2>
-        <button id="adminCloseButton">X</button>
-        <div class="admin-field"><input type="number" id="adminCoins" placeholder="Coins"><button id="setCoins">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminCoinsPerClick" placeholder="Coins Per Click"><button id="setCoinsPerClick">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminUpgrades" placeholder="Upgrade Level"><button id="setUpgrades">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminUpgradeCost" placeholder="Upgrade Cost"><button id="setUpgradeCost">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminRebirths" placeholder="Rebirths"><button id="setRebirths">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminRebirthCost" placeholder="Rebirth Cost"><button id="setRebirthCost">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminCombo" placeholder="Combo Multiplier"><button id="setCombo">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminDailySet" placeholder="Set Days"><button id="setDailyRewards">Set</button></div>
-        <div class="admin-field"><input type="text" id="adminSkins" placeholder="Skin Indexes (e.g., 1,2)"><button id="setSkins">Set</button></div>
-        <div class="admin-field"><input type="text" id="adminAchievements" placeholder="Achievement Indexes (e.g., 1,2)"><button id="setAchievements">Set</button></div>
-        <div class="admin-field"><label for="adminAutoclickDetect">Autoclick Detection:</label><input type="checkbox" id="adminAutoclickDetect" checked><button id="toggleAutoclickDetect">Toggle</button></div>
-        <div class="admin-field"><input type="number" id="adminClicksPerSec" placeholder="Clicks/sec"><button id="setClicksPerSec">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminLevel" placeholder="Player Level"><button id="setLevel">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminShopRefresh" placeholder="Shop Refresh (s)"><button id="setShopRefresh">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminCoinsPerSec" placeholder="Coins/sec"><button id="setCoinsPerSec">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminComboBoost" placeholder="Combo Boost (e.g., 1.5)"><button id="setComboBoost">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminTempBoostDuration" placeholder="Temp Boost Duration (s)"><button id="setTempBoost">Set Coins/sec x2</button></div>
-        <div class="admin-field"><input type="number" id="adminTotalClicks" placeholder="Total Clicks"><button id="setTotalClicks">Set</button></div>
-        <div class="admin-field"><input type="number" id="adminTotalCoinsEarned" placeholder="Total Coins Earned"><button id="setTotalCoinsEarned">Set</button></div>
-        <div class="admin-field"><button id="forceShopRefresh">Force Shop Refresh</button></div>
-        <div class="admin-field"><button id="unlockAllSkins">Unlock All Skins</button></div>
-        <div class="admin-field"><button id="completeAllAchievements">Complete All Achievements</button></div>
-        <div class="admin-field"><button id="resetDailyRewards">Reset Daily Rewards</button></div>
-        <div class="admin-field"><button id="clearTempBoosts">Clear Temp Boosts</button></div>
-        <div class="admin-field"><button id="resetShopQuantities">Reset Shop Quantities</button></div>
-        <div class="admin-field"><button id="maxShopPurchases">Max All Shop Purchases</button></div>
-        <div class="admin-field"><button id="triggerJumpscare">Trigger Jumpscare</button></div>
+    
+    <div id="skinsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Skins</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="skins-container" id="skinsContainer"></div>
+            <div class="pagination">
+                <button id="skinsPrev" class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                <span id="skinsPage">Page 1</span>
+                <button id="skinsNext" class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
     </div>
-    <div id="jumpscare"></div>
+    
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="settings-container">
+                <div class="setting-option">
+                    <label for="themeSelect">Theme:</label>
+                    <select id="themeSelect">
+                        <option value="night">Night</option>
+                        <option value="light">Light</option>
+                    </select>
+                </div>
+                <div class="setting-option">
+                    <button id="exportSave" class="action-btn">Export Save</button>
+                    <button id="importSave" class="action-btn">Import Save</button>
+                </div>
+                <div class="setting-option">
+                    <textarea id="exportSaveText" placeholder="Your save code will appear here" readonly></textarea>
+                </div>
+                <div class="setting-option">
+                    <textarea id="importSaveText" placeholder="Paste save code here"></textarea>
+                </div>
+                <div class="setting-option">
+                    <button id="resetGame" class="danger-btn">Reset Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="adminModal" class="modal">
+        <div class="modal-content wide-modal">
+            <div class="modal-header">
+                <h2>Admin Panel</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="admin-container" id="adminContainer"></div>
+        </div>
+    </div>
+    
+    <!-- Tutorial Overlay -->
+    <div id="tutorialOverlay" class="tutorial-overlay">
+        <div class="tutorial-step" id="tutorialStep1">
+            <h3>Welcome to Svlk-Byte Clicker!</h3>
+            <p>Tap the big button in the center to earn coins.</p>
+            <button class="tutorial-next">Next</button>
+        </div>
+        <div class="tutorial-step" id="tutorialStep2" style="display:none;">
+            <h3>Upgrade Button</h3>
+            <p>Buy upgrades to earn more coins per click.</p>
+            <button class="tutorial-next">Next</button>
+        </div>
+        <div class="tutorial-step" id="tutorialStep3" style="display:none;">
+            <h3>Rebirth System</h3>
+            <p>Rebirth resets your progress but gives a permanent multiplier!</p>
+            <button class="tutorial-next">Next</button>
+        </div>
+        <div class="tutorial-step" id="tutorialStep4" style="display:none;">
+            <h3>Combo System</h3>
+            <p>Click rapidly to build combo and earn bonus coins!</p>
+            <button class="tutorial-next">Got it!</button>
+        </div>
+    </div>
+    
+    <!-- Audio Element -->
     <audio id="clickSound" loop></audio>
-
+    
     <script src="game.js"></script>
 </body>
 </html>
