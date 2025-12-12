@@ -6,7 +6,7 @@ const gameData = {
     upgradeLevel: 0,
     upgradeCost: 10,
     rebirths: 0,
-    rebirthCost: 1000,
+    rebirthCost: 1000000,
     clickCombo: 0,
     comboBoost: 1,
     totalClicks: 0,
@@ -356,7 +356,7 @@ function handleUpgrade(e) {
         gameData.coinsPerClick++;
         
         // Increase upgrade cost
-        gameData.upgradeCost = Math.floor(gameData.upgradeCost * 1.15);
+        gameData.upgradeCost = Math.floor(10 * Math.pow(gameData.upgradeLevel, 2)) || 10;
         
         updateUI();
         saveGameData();
@@ -380,7 +380,7 @@ function handleRebirth(e) {
         gameData.rebirths++;
         
         // Increase rebirth cost
-        gameData.rebirthCost = Math.floor(gameData.rebirthCost * 2);
+        gameData.rebirthCost = Math.floor(1000000 * Math.pow(2, gameData.rebirths));
         
         updateUI();
         saveGameData();
