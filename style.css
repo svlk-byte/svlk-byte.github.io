@@ -595,7 +595,80 @@ body {
     opacity: 0.5;
     cursor: not-allowed;
 }
+/* Admin Code Modal Styles */
+.small-modal {
+    max-width: 400px;
+}
 
+.admin-code-container {
+    padding: 20px;
+    text-align: center;
+}
+
+#adminCodeInput {
+    width: 100%;
+    padding: 15px;
+    font-size: 2rem;
+    text-align: center;
+    letter-spacing: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    margin-bottom: 15px;
+    font-family: monospace;
+}
+
+.light-theme #adminCodeInput {
+    border-color: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+.code-hint {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.error-message {
+    color: #ff6b6b;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    min-height: 20px;
+}
+
+/* Admin Panel Access Button */
+.admin-access-btn {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.admin-access-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Vibration animation for incorrect code */
+@keyframes vibrate {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+.vibrate {
+    animation: vibrate 0.3s ease;
+}
 /* Admin Panel */
 .admin-container {
     padding: 20px;
