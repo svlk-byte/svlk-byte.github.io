@@ -198,7 +198,9 @@ function setupEventListeners() {
 }
 
 function handleClickStart(e) {
-    e.preventDefault();
+    if (e.type === 'touchstart') {
+        e.preventDefault();
+    }
     if (!isClickInProgress) {
         isClickInProgress = true;
         clickStartTime = Date.now();
@@ -210,7 +212,9 @@ function handleClickStart(e) {
 function handleClickEnd(e) {
     if (!isClickInProgress) return;
 
-    e.preventDefault();
+    if (e.type === 'touchend') {
+        e.preventDefault();
+    };
     isClickInProgress = false;
 
     const clickDuration = Date.now() - clickStartTime;
