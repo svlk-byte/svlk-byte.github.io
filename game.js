@@ -255,6 +255,12 @@ function handleClickCancel() {
 }
 
 // Autoclicker Detection
+const CLICK_THRESHOLD = 5;
+const TIME_THRESHOLD = 1000;
+const MIN_INTERVAL = 50;
+const CONSISTENT_THRESHOLD = 20;
+const INTERVAL_TOLERANCE = 5;
+
 function detectAutoclicker() {
     const now = Date.now();
     clickTimes.push(now);
