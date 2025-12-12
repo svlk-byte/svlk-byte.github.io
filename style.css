@@ -73,7 +73,8 @@ body {
     justify-content: center;
 }
 
-.menu-btn:hover, .menu-btn:active {
+.menu-btn:hover,
+.menu-btn:active {
     background: rgba(255, 255, 255, 0.2);
     transform: scale(1.05);
 }
@@ -147,6 +148,7 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+
     100% {
         opacity: 0;
         transform: translateY(-50px);
@@ -570,7 +572,8 @@ body {
     cursor: not-allowed;
 }
 
-#shopPage, #skinsPage {
+#shopPage,
+#skinsPage {
     margin: 0 20px;
     font-weight: 600;
 }
@@ -595,6 +598,7 @@ body {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
 /* Admin Code Modal Styles */
 .small-modal {
     max-width: 400px;
@@ -659,16 +663,31 @@ body {
 
 /* Vibration animation for incorrect code */
 @keyframes vibrate {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
-    100% { transform: translateX(0); }
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    50% {
+        transform: translateX(5px);
+    }
+
+    75% {
+        transform: translateX(-5px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
 }
 
 .vibrate {
     animation: vibrate 0.3s ease;
 }
+
 /* Admin Panel */
 .admin-container {
     padding: 20px;
@@ -771,38 +790,38 @@ body {
     .clicker-button {
         height: 100vh;
     }
-    
+
     .upgrade-btn {
         width: 100px;
         height: 100px;
     }
-    
+
     .upgrade-btn span {
         font-size: 1rem;
     }
-    
+
     .counter {
         font-size: 2rem;
     }
-    
+
     .combo-counter {
         font-size: 1rem;
     }
-    
+
     .menu-btn {
         width: 45px;
         height: 45px;
         font-size: 1.3rem;
     }
-    
+
     .skins-container {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
-    
+
     .top-bar {
         padding: 10px 15px;
     }
-    
+
     .bottom-bar {
         padding: 15px;
     }
@@ -812,28 +831,28 @@ body {
     .clicker-button {
         height: 100vh;
     }
-    
+
     .upgrade-btn {
         width: 90px;
         height: 90px;
     }
-    
+
     .upgrade-btn span {
         font-size: 0.9rem;
     }
-    
+
     .counter {
         font-size: 1.8rem;
     }
-    
+
     .modal-content {
         max-height: 85vh;
     }
-    
+
     .bottom-bar {
         padding: 10px;
     }
-    
+
     .upgrade-info {
         font-size: 0.9rem;
         padding: 6px 10px;
@@ -867,14 +886,12 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.5) 0%,
-        rgba(0, 0, 0, 0.3) 20%,
-        rgba(0, 0, 0, 0.2) 50%,
-        rgba(0, 0, 0, 0.3) 80%,
-        rgba(0, 0, 0, 0.5) 100%
-    );
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.5) 0%,
+            rgba(0, 0, 0, 0.3) 20%,
+            rgba(0, 0, 0, 0.2) 50%,
+            rgba(0, 0, 0, 0.3) 80%,
+            rgba(0, 0, 0, 0.5) 100%);
     pointer-events: none;
     z-index: 1;
 }
