@@ -29,6 +29,11 @@ const MAX_MULTIPLIER = 3;
 const ITEMS_PER_PAGE = 4;
 const SHOP_ITEM_COUNT = 5;
 
+// Autoclick variables
+let clickTimes = [];
+let clicksBlocked = false;
+let blockEndTime = 0;
+
 // Shop Items Database
 const shopItemsDB = [
     { name: "+1 Coin Per Click", effect: (gd) => gd.coinsPerClick++, cost: (gd) => Math.floor(50 * Math.pow(1.15, gd.coinsPerClick)), maxQty: 100 },
@@ -249,8 +254,72 @@ function handleClickCancel() {
     }
 }
 
+// Autoclicker Detection
+const CLICK_THRESHOLD = 10;
+const TIME_THRESHOLD = 1000;
+const MIN_INTERVAL = 50;
+const CONSISTENT_THRESHOLD = 20;
+const INTERVAL_TOLERANCE = 5;
+
+function detectAutoclicker() {
+    const now = Date.now();
+    clickTimes.push(now);
+    
+    // Keep only recent click times
+    if (clickTimes.length > Math.max(CLICK_THRESHOLD, CONSISTENT_THRESHOLD)) {
+        clickTimes.shift();
+    }
+    
+    // Check for too many clicks in too short time
+    if (clickTimes.length >= CLICK_THRESHOLD) {
+        const timeSpan = clickTimes[clickTimes.length - 1] - clickTimes[clickTimes.length - CLICK_THRESHOLD];
+        if (timeSpan < TIME_THRESHOLD && (timeSpan / (CLICK_THRESHOLD - 1)) < MIN_INTERVAL) {
+            blockClicksFor3sec();
+            return true;
+        }
+    }
+    
+    // Check for perfectly consistent clicking patterns
+    if (clickTimes.length >= CONSISTENT_THRESHOLD) {
+        const intervals = clickTimes.slice(-CONSISTENT_THRESHOLD).map((t, i, arr) => 
+            i > 0 ? t - arr[i - 1] : null
+        ).slice(1);
+        
+        const avg = intervals.reduce((a, b) => a + b) / intervals.length;
+        
+        // Check if all intervals are nearly identical (autoclicker signature)
+        if (intervals.every(i => Math.abs(i - avg) <= INTERVAL_TOLERANCE)) {
+            blockClicksFor3sec();
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+function blockClicksFor3sec() {
+    clicksBlocked = true;
+    blockEndTime = Date.now() + 3000; // 3 seconds
+    
+    // Auto-unblock after 3 seconds
+    setTimeout(() => {
+        clicksBlocked = false;
+        clickTimes = []; // Reset click history after blocking
+    }, 3000);
+}
+
 function handleActualClick() {
-    // Calculate base coins
+    // Check if clicks are currently blocked
+    if (clicksBlocked) {
+        return; // Do nothing if blocked
+    }
+    
+    // Detect autoclicker BEFORE processing the click
+    if (detectAutoclicker()) {
+        return; // Don't process this click if autoclicker detected
+    }
+    
+    // Rest of your existing click handling code...
     let coinsEarned = gameData.coinsPerClick;
     
     // Apply rebirth multiplier
