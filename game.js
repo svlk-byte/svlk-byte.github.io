@@ -34,6 +34,13 @@ let clickTimes = [];
 let clicksBlocked = false;
 let blockEndTime = 0;
 
+// Admin Panel
+let adminCodeAttempts = 0;
+const ADMIN_CODE = "AlbertPidor"; // Change this to any 4-digit code you want
+const MAX_ATTEMPTS = 3;
+let adminCodeLocked = false;
+let adminCodeLockUntil = 0;
+
 // Shop Items Database
 const shopItemsDB = [
     { name: "+1 Coin Per Click", effect: (gd) => gd.coinsPerClick++, cost: (gd) => Math.floor(50 * Math.pow(1.15, gd.coinsPerClick)), maxQty: 100 },
@@ -130,6 +137,7 @@ const elements = {
 function initGame() {
     loadGameData();
     setupEventListeners();
+    setupAdminCodeListeners();
     setupSound();
     updateAllButtonImages(); // NEW: Initialize all button images
     startCoinsPerSec();
@@ -203,13 +211,6 @@ function setupEventListeners() {
     elements.shopNext.addEventListener('click', () => changeShopPage(1));
     elements.skinsPrev.addEventListener('click', () => changeSkinsPage(-1));
     elements.skinsNext.addEventListener('click', () => changeSkinsPage(1));
-    
-    // Admin panel activation (hold coin counter for 5 seconds)
-    elements.coinCounter.addEventListener('mousedown', startAdminHold);
-    elements.coinCounter.addEventListener('touchstart', startAdminHold);
-    elements.coinCounter.addEventListener('mouseup', cancelAdminHold);
-    elements.coinCounter.addEventListener('touchend', cancelAdminHold);
-    elements.coinCounter.addEventListener('mouseleave', cancelAdminHold);
     
     // Tutorial
     document.querySelectorAll('.tutorial-next').forEach(btn => {
@@ -827,15 +828,109 @@ function resetGame() {
 }
 
 // Admin Panel
-function startAdminHold() {
+function setupAdminCodeListeners() {
+    // Coin counter hold for 5 seconds shows code input
+    elements.coinCounter.addEventListener('mousedown', startAdminCodeHold);
+    elements.coinCounter.addEventListener('touchstart', startAdminCodeHold);
+    elements.coinCounter.addEventListener('mouseup', cancelAdminCodeHold);
+    elements.coinCounter.addEventListener('touchend', cancelAdminCodeHold);
+    elements.coinCounter.addEventListener('mouseleave', cancelAdminCodeHold);
+    
+    // Admin code submission
+    document.getElementById('submitAdminCode').addEventListener('click', submitAdminCode);
+    document.getElementById('adminCodeInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            submitAdminCode();
+        }
+    });
+    
+    // Close admin code modal
+    document.querySelector('#adminCodeModal .close-modal').addEventListener('click', () => {
+        document.getElementById('adminCodeModal').style.display = 'none';
+        resetCodeInput();
+    });
+}
+
+// Admin Code Hold Functions
+function startAdminCodeHold() {
     adminHoldTimeout = setTimeout(() => {
-        isAdminHold = true;
-        showModal('adminModal');
+        if (!adminCodeLocked || Date.now() > adminCodeLockUntil) {
+            showAdminCodeModal();
+        }
     }, 5000);
 }
 
-function cancelAdminHold() {
+function cancelAdminCodeHold() {
     clearTimeout(adminHoldTimeout);
+}
+
+function showAdminCodeModal() {
+    // Check if locked
+    if (adminCodeLocked && Date.now() < adminCodeLockUntil) {
+        const remainingTime = Math.ceil((adminCodeLockUntil - Date.now()) / 1000);
+        alert(`Admin access locked. Try again in ${remainingTime} seconds.`);
+        return;
+    }
+    
+    document.getElementById('adminCodeModal').style.display = 'flex';
+    document.getElementById('adminCodeInput').focus();
+    document.getElementById('codeError').textContent = '';
+}
+
+function submitAdminCode() {
+    const codeInput = document.getElementById('adminCodeInput');
+    const errorElement = document.getElementById('codeError');
+    const enteredCode = codeInput.value;
+    
+    // Check if locked
+    if (adminCodeLocked && Date.now() < adminCodeLockUntil) {
+        const remainingTime = Math.ceil((adminCodeLockUntil - Date.now()) / 1000);
+        errorElement.textContent = `Locked. Try again in ${remainingTime} seconds.`;
+        return;
+    }
+    
+    if (enteredCode === ADMIN_CODE) {
+        // Correct code
+        adminCodeAttempts = 0;
+        adminCodeLocked = false;
+        document.getElementById('adminCodeModal').style.display = 'none';
+        resetCodeInput();
+        showModal('adminModal'); // Show actual admin panel
+    } else {
+        // Incorrect code
+        adminCodeAttempts++;
+        errorElement.textContent = `Incorrect code. Attempts: ${adminCodeAttempts}/${MAX_ATTEMPTS}`;
+        
+        // Add vibration effect
+        codeInput.classList.add('vibrate');
+        setTimeout(() => {
+            codeInput.classList.remove('vibrate');
+        }, 300);
+        
+        // Clear input
+        codeInput.value = '';
+        codeInput.focus();
+        
+        // Lock after max attempts
+        if (adminCodeAttempts >= MAX_ATTEMPTS) {
+            adminCodeLocked = true;
+            adminCodeLockUntil = Date.now() + 30000; // Lock for 30 seconds
+            errorElement.textContent = `Too many attempts! Locked for 30 seconds.`;
+            codeInput.disabled = true;
+            
+            setTimeout(() => {
+                adminCodeLocked = false;
+                adminCodeAttempts = 0;
+                codeInput.disabled = false;
+                errorElement.textContent = 'Lock expired. Try again.';
+            }, 30000);
+        }
+    }
+}
+
+function resetCodeInput() {
+    document.getElementById('adminCodeInput').value = '';
+    document.getElementById('codeError').textContent = '';
 }
 
 function setupAdminPanel() {
