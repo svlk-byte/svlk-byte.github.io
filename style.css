@@ -8,55 +8,31 @@
     touch-action: manipulation;
 }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
-
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
-    transition: background-color 0.3s, color 0.3s;
-    position: fixed;
-    width: 100vw;
     height: 100vh;
-}
-
-/* Remove scrollbars */
-body::-webkit-scrollbar {
-    display: none;
-}
-
-body {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    width: 100vw;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 /* Themes */
 .night-theme {
-    background: #0f0f23;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
     color: #e0e0e0;
 }
 
 .light-theme {
-    background: #f5f7fa;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     color: #333;
 }
 
-/* Game Container - FULL SCREEN */
+/* Game Container */
 .game-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
     height: 100vh;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
 }
 
 /* Top Bar */
@@ -64,28 +40,22 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 15px 20px;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    height: 80px;
 }
 
 .top-left {
     display: flex;
     gap: 15px;
-    align-items: center;
 }
 
 .top-right {
     text-align: right;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
 .menu-btn {
@@ -101,7 +71,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
 }
 
 .menu-btn:hover, .menu-btn:active {
@@ -115,32 +84,30 @@ body {
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     color: #ffd700;
     margin-bottom: 5px;
-    line-height: 1;
 }
 
 .combo-counter {
     font-size: 1.2rem;
     color: #ff6b6b;
     font-weight: 600;
-    line-height: 1.2;
 }
 
-/* Main Clicker Button - TRUE FULL SCREEN */
+/* Clicker Area */
 .clicker-area {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     z-index: 1;
-    pointer-events: none;
 }
 
+/* Main Clicker Button - FULL SCREEN */
 .clicker-button {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     background-size: cover;
     background-position: center;
@@ -148,62 +115,41 @@ body {
     border: none;
     cursor: pointer;
     outline: none;
-    transition: transform 0.1s ease;
+    transition: transform 0.2s ease;
     -webkit-tap-highlight-color: transparent;
-    pointer-events: auto;
-    z-index: 3;
+    z-index: 2;
     padding: 0;
     margin: 0;
-    display: block;
-}
-
-/* Default skin background */
-.clicker-button {
     background-image: url('Skins/SvetlanaSkin.jpg');
 }
 
 .clicker-button:active {
-    transform: scale(0.995);
+    transform: scale(0.98);
 }
 
-/* Visual overlay for better text visibility */
-.screen-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.6) 0%,
-        rgba(0, 0, 0, 0.3) 20%,
-        rgba(0, 0, 0, 0.15) 50%,
-        rgba(0, 0, 0, 0.3) 80%,
-        rgba(0, 0, 0, 0.6) 100%
-    );
-    pointer-events: none;
-    z-index: 2;
+.clicker-button:hover {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
 }
 
 .click-feedback {
-    position: fixed;
+    position: absolute;
     pointer-events: none;
     font-size: 1.8rem;
     font-weight: bold;
     color: #ffd700;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
     animation: floatUp 1s forwards;
-    z-index: 4;
+    z-index: 3;
 }
 
 @keyframes floatUp {
     0% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
     100% {
         opacity: 0;
-        transform: translateY(-50px) scale(1.2);
+        transform: translateY(-50px);
     }
 }
 
@@ -212,15 +158,13 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 20px;
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    height: 150px;
+    z-index: 1000;
 }
 
 .upgrade-container {
@@ -238,19 +182,16 @@ body {
     padding: 8px 15px;
     border-radius: 20px;
     width: 100%;
-    max-width: 200px;
 }
 
 .upgrade-cost {
     color: #ff6b6b;
     font-weight: 600;
-    line-height: 1.2;
 }
 
 .upgrade-level {
     color: #4ecdc4;
     font-weight: 600;
-    line-height: 1.2;
 }
 
 .upgrade-btn {
@@ -263,7 +204,6 @@ body {
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.3s;
     padding: 0;
-    flex-shrink: 0;
 }
 
 .upgrade-btn img {
@@ -283,7 +223,6 @@ body {
     font-weight: bold;
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
     z-index: 2;
-    white-space: nowrap;
 }
 
 .upgrade-normal-btn {
@@ -312,9 +251,9 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
     z-index: 2000;
     align-items: center;
     justify-content: center;
@@ -352,10 +291,6 @@ body {
     align-items: center;
     padding: 20px;
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-    position: sticky;
-    top: 0;
-    background: inherit;
-    z-index: 1;
 }
 
 .light-theme .modal-header {
@@ -381,7 +316,6 @@ body {
     justify-content: center;
     border-radius: 50%;
     transition: background-color 0.2s;
-    flex-shrink: 0;
 }
 
 .close-modal:hover {
@@ -394,8 +328,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -412,8 +344,6 @@ body {
     justify-content: space-between;
     align-items: center;
     transition: background-color 0.2s;
-    flex-wrap: wrap;
-    gap: 10px;
 }
 
 .light-theme .shop-item {
@@ -430,7 +360,6 @@ body {
 
 .shop-item-info {
     flex: 1;
-    min-width: 200px;
 }
 
 .shop-item-name {
@@ -442,7 +371,6 @@ body {
 .shop-item-cost {
     color: #ffd700;
     font-weight: 600;
-    font-size: 1rem;
 }
 
 .shop-item-qty {
@@ -487,10 +415,6 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     border: 2px solid transparent;
-    min-height: 150px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
 }
 
 .light-theme .skin-item {
@@ -521,17 +445,14 @@ body {
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    margin: 0 auto 10px;
+    margin-bottom: 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    flex-shrink: 0;
 }
 
 .skin-name {
     font-weight: 600;
     margin-bottom: 5px;
     font-size: 0.9rem;
-    line-height: 1.2;
-    word-break: break-word;
 }
 
 .skin-cost {
@@ -553,13 +474,12 @@ body {
     display: block;
     margin-bottom: 5px;
     font-weight: 600;
-    font-size: 1.1rem;
 }
 
 .setting-option select,
 .setting-option textarea {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.1);
@@ -624,8 +544,6 @@ body {
     align-items: center;
     padding: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    flex-wrap: wrap;
-    gap: 10px;
 }
 
 .page-btn {
@@ -641,7 +559,6 @@ body {
     color: inherit;
     font-size: 1.2rem;
     transition: background-color 0.2s;
-    flex-shrink: 0;
 }
 
 .page-btn:hover:not(:disabled) {
@@ -654,11 +571,8 @@ body {
 }
 
 #shopPage, #skinsPage {
-    margin: 0 10px;
+    margin: 0 20px;
     font-weight: 600;
-    font-size: 1.1rem;
-    min-width: 80px;
-    text-align: center;
 }
 
 /* Small buttons */
@@ -671,7 +585,6 @@ body {
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s;
-    white-space: nowrap;
 }
 
 .small-btn:hover:not(:disabled) {
@@ -708,7 +621,6 @@ body {
     background: rgba(255, 255, 255, 0.1);
     color: inherit;
     margin-bottom: 8px;
-    font-size: 1rem;
 }
 
 .admin-field button {
@@ -732,14 +644,13 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
     z-index: 3000;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
-    padding: 20px;
 }
 
 .tutorial-step {
@@ -747,7 +658,7 @@ body {
     padding: 30px;
     border-radius: 20px;
     max-width: 500px;
-    width: 100%;
+    width: 90%;
     text-align: center;
     border: 3px solid #4a4a8a;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
@@ -766,91 +677,35 @@ body {
     line-height: 1.5;
 }
 
-.tutorial-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
 .tutorial-next {
     background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
     border: none;
-    padding: 12px 30px;
+    padding: 12px 40px;
     border-radius: 25px;
     cursor: pointer;
     font-weight: 600;
     font-size: 1.1rem;
     transition: transform 0.2s;
-    min-width: 120px;
 }
 
 .tutorial-next:hover {
     transform: scale(1.05);
 }
 
-.tutorial-skip {
-    background: transparent;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.7);
-    padding: 12px 30px;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-    min-width: 120px;
-    font-size: 1.1rem;
-}
-
-.tutorial-skip:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* Prevent text selection */
-.no-select {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-/* Fix for mobile browsers */
-@supports (-webkit-touch-callout: none) {
-    .game-container {
-        height: -webkit-fill-available;
+/* Responsive Design */
+@media (max-width: 768px) {
+    .clicker-button {
+        height: 100vh;
     }
     
-    .clicker-button {
-        height: -webkit-fill-available;
+    .upgrade-btn {
+        width: 100px;
+        height: 100px;
     }
-}
-
-/* Responsive Design for Small Phones */
-@media (max-height: 700px) {
-    .top-bar {
-        padding: 12px 16px;
-        height: 70px;
+    
+    .upgrade-btn span {
+        font-size: 1rem;
     }
     
     .counter {
@@ -867,49 +722,22 @@ body {
         font-size: 1.3rem;
     }
     
+    .skins-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    
+    .top-bar {
+        padding: 10px 15px;
+    }
+    
     .bottom-bar {
         padding: 15px;
-        height: 130px;
-    }
-    
-    .upgrade-btn {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .upgrade-btn span {
-        font-size: 1rem;
-    }
-    
-    .upgrade-info {
-        font-size: 1rem;
-        padding: 6px 12px;
     }
 }
 
-@media (max-height: 600px) {
-    .top-bar {
-        padding: 10px 14px;
-        height: 65px;
-    }
-    
-    .counter {
-        font-size: 1.8rem;
-    }
-    
-    .combo-counter {
-        font-size: 0.9rem;
-    }
-    
-    .menu-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-    }
-    
-    .bottom-bar {
-        padding: 12px;
-        height: 120px;
+@media (max-width: 480px) {
+    .clicker-button {
+        height: 100vh;
     }
     
     .upgrade-btn {
@@ -921,171 +749,59 @@ body {
         font-size: 0.9rem;
     }
     
-    .upgrade-info {
-        font-size: 0.9rem;
-        padding: 5px 10px;
-    }
-    
-    .skins-container {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        padding: 15px;
-        gap: 12px;
-    }
-    
-    .skin-item {
-        padding: 12px;
-        min-height: 140px;
-    }
-    
-    .skin-image {
-        width: 70px;
-        height: 70px;
-    }
-    
-    .shop-items {
-        padding: 15px;
-    }
-    
-    .shop-item {
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-}
-
-@media (max-height: 500px) {
-    .top-bar {
-        padding: 8px 12px;
-        height: 60px;
-    }
-    
     .counter {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
     }
     
-    .combo-counter {
-        font-size: 0.8rem;
-    }
-    
-    .menu-btn {
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
+    .modal-content {
+        max-height: 85vh;
     }
     
     .bottom-bar {
         padding: 10px;
-        height: 110px;
-    }
-    
-    .upgrade-btn {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .upgrade-btn span {
-        font-size: 0.8rem;
     }
     
     .upgrade-info {
-        font-size: 0.8rem;
-        padding: 4px 8px;
-        border-radius: 15px;
-    }
-    
-    .click-feedback {
-        font-size: 1.5rem;
+        font-size: 0.9rem;
+        padding: 6px 10px;
     }
 }
 
-@media (max-width: 480px) {
-    .skins-container {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    }
-    
-    .skin-image {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .skin-name {
-        font-size: 0.8rem;
-    }
-    
-    .action-btn {
-        width: 100%;
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-    
-    .action-btn:last-child {
-        margin-bottom: 0;
-    }
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
 }
 
-/* Landscape mode */
-@media (orientation: landscape) and (max-height: 500px) {
-    .top-bar {
-        height: 55px;
-        padding: 5px 10px;
-    }
-    
-    .bottom-bar {
-        height: 90px;
-        padding: 5px 10px;
-    }
-    
-    .upgrade-btn {
-        width: 70px;
-        height: 70px;
-    }
-    
-    .upgrade-btn span {
-        font-size: 0.7rem;
-    }
-    
-    .upgrade-info {
-        font-size: 0.7rem;
-        padding: 3px 6px;
-        margin-bottom: 5px;
-    }
-    
-    .counter {
-        font-size: 1.4rem;
-    }
-    
-    .combo-counter {
-        font-size: 0.7rem;
-    }
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
 }
 
-/* Extra small screens */
-@media (max-width: 320px) {
-    .skins-container {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .shop-item {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .shop-item-info {
-        min-width: auto;
-    }
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
 }
 
-/* Fix for notch phones */
-@supports (padding: max(0px)) {
-    .top-bar, .bottom-bar, .modal {
-        padding-left: max(20px, env(safe-area-inset-left));
-        padding-right: max(20px, env(safe-area-inset-right));
-    }
-    
-    .top-bar {
-        padding-top: max(15px, env(safe-area-inset-top));
-    }
-    
-    .bottom-bar {
-        padding-bottom: max(20px, env(safe-area-inset-bottom));
-    }
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Add overlay for better text visibility */
+.clicker-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.5) 0%,
+        rgba(0, 0, 0, 0.3) 20%,
+        rgba(0, 0, 0, 0.2) 50%,
+        rgba(0, 0, 0, 0.3) 80%,
+        rgba(0, 0, 0, 0.5) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
 }
