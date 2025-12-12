@@ -255,7 +255,7 @@ function handleClickCancel() {
 }
 
 // Autoclicker Detection
-const CLICK_THRESHOLD = 10;
+const CLICK_THRESHOLD = 6;
 const TIME_THRESHOLD = 1000;
 const MIN_INTERVAL = 50;
 const CONSISTENT_THRESHOLD = 20;
