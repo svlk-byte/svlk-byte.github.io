@@ -127,10 +127,10 @@ function initGame() {
     setupEventListeners();
     setupSound();
     updateAllButtonImages(); // NEW: Initialize all button images
-    updateUI();
     startCoinsPerSec();
     updateShopTimer();
     generateShopItems();
+    updateUI();
     setupAdminPanel();
     
     // Show tutorial only for new players who haven't seen it
@@ -630,12 +630,25 @@ function updateUI() {
 }
 
 // Format Numbers
-function formatNumber(num) {
-    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return Math.floor(num).toString();
+function formatNumber(num, decimals = 2) {
+    if (num === null || num === undefined || !isFinite(num)) return '0';
+    if (num < 1000) return Math.floor(num).toString();
+
+    const suffixes = [
+        '', 'K', 'M', 'B', 'T',
+        'Qa', 'Qi', 'Sx', 'Sp', 'Oc',
+        'N', 'D', 'Ud', 'Dd', 'Td',
+        'Qd', 'Qt', 'Sd', 'Ud', 'Dd', // reuse creatively
+        'Vt', 'Uv', 'Dv', 'Tv', 'Qtv', 'Qiv'
+    ];
+
+    const tier = Math.log10(Math.abs(num)) / 3 | 0;
+    if (tier == 0) return Math.floor(num).toString();
+
+    const suffix = suffixes[tier] || `e${tier * 3}`;
+    const scaled = num / Math.pow(10, tier * 3);
+
+    return scaled.toFixed(decimals).replace(/\.0+$/, '') + suffix;
 }
 
 // Start Coins Per Second
