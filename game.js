@@ -126,10 +126,19 @@ const elements = {
 
 // Initialize Game
 function initGame() {
-    // Check for valid game save first
-    const hasValidSave = checkForValidSave();
+    console.log("Game initializing...");
     
+    // Load game data FIRST
     loadGameData();
+    
+    console.log("Loaded game data:", {
+        tutorialCompleted: gameData.tutorialCompleted,
+        count: gameData.count,
+        totalClicks: gameData.totalClicks,
+        rebirths: gameData.rebirths
+    });
+    
+    // Setup everything else
     setupEventListeners();
     setupSound();
     updateUI();
@@ -137,24 +146,34 @@ function initGame() {
     updateShopTimer();
     generateShopItems();
     setupAdminPanel();
-    adjustForScreenSize();
+    updateAllButtonImages();
     
-    // Show tutorial only if NO valid save exists and tutorial not completed
-    if (!hasValidSave && !gameData.tutorialCompleted) {
-        // Additional check: if this looks like a new game
-        if (gameData.count === 0 && gameData.totalClicks === 0 && gameData.rebirths === 0) {
-            setTimeout(() => {
-                showTutorial();
-            }, 1000); // Delay for smoother experience
-        } else {
-            isInitialized = true;
-        }
+    // FIXED TUTORIAL LOGIC - ONLY show if tutorial is NOT completed AND game is brand new
+    const shouldShowTutorial = !gameData.tutorialCompleted && 
+                              gameData.count === 0 && 
+                              gameData.totalClicks === 0 && 
+                              gameData.rebirths === 0 &&
+                              gameData.unlockedSkins.length === 1; // Only default skin
+    
+    console.log("Should show tutorial:", shouldShowTutorial);
+    console.log("Conditions:", {
+        tutorialNotCompleted: !gameData.tutorialCompleted,
+        countZero: gameData.count === 0,
+        clicksZero: gameData.totalClicks === 0,
+        rebirthsZero: gameData.rebirths === 0,
+        skinsLength: gameData.unlockedSkins.length
+    });
+    
+    if (shouldShowTutorial) {
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+            showTutorial();
+        }, 500);
     } else {
         isInitialized = true;
+        // Hide tutorial overlay if it's somehow visible
+        elements.tutorialOverlay.style.display = 'none';
     }
-    
-    // Update all button images
-    updateAllButtonImages();
 }
 
 // Setup Event Listeners
@@ -233,9 +252,28 @@ function setupEventListeners() {
         btn.addEventListener('click', skipTutorial);
     });
     
-    // Window resize for responsive scaling
-    window.addEventListener('resize', adjustForScreenSize);
-    window.addEventListener('orientationchange', adjustForScreenSize);
+    // Prevent zoom on mobile
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    document.addEventListener('gesturechange', (e) => e.preventDefault());
+    document.addEventListener('gestureend', (e) => e.preventDefault());
+    
+    // Prevent pull-to-refresh on mobile
+    document.addEventListener('touchmove', (e) => {
+        if (e.scale !== 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    // Fix for iOS Safari 100vh issue
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        function setVH() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        setVH();
+        window.addEventListener('resize', setVH);
+        window.addEventListener('orientationchange', setVH);
+    }
 }
 
 // Click handlers for instant response
@@ -274,7 +312,7 @@ function handleClick(e) {
     lastClickTime = now;
     
     // Visual feedback
-    elements.mainClicker.style.transform = 'scale(0.98)';
+    elements.mainClicker.style.transform = 'scale(0.995)';
     
     // Calculate base coins
     let coinsEarned = gameData.coinsPerClick;
@@ -734,70 +772,28 @@ function loadGameData() {
     if (saved) {
         try {
             const loaded = JSON.parse(saved);
-            Object.assign(gameData, loaded);
+            
+            // Merge with existing gameData, preserving defaults for missing properties
+            Object.keys(gameData).forEach(key => {
+                if (loaded[key] !== undefined) {
+                    gameData[key] = loaded[key];
+                }
+            });
             
             // Apply theme
             document.body.className = gameData.theme + '-theme';
-            elements.themeSelect.value = gameData.theme;
+            if (elements.themeSelect) {
+                elements.themeSelect.value = gameData.theme;
+            }
             
-            // Update all button images
-            updateAllButtonImages();
-            updateSound();
+            console.log("Game data loaded successfully, tutorialCompleted:", gameData.tutorialCompleted);
         } catch (error) {
             console.error('Failed to load save:', error);
-            // Reset to default if save is corrupted
-            resetGameData();
+            // Keep default gameData
         }
+    } else {
+        console.log("No save found, using default data");
     }
-}
-
-function checkForValidSave() {
-    const saved = localStorage.getItem('svlkClickerSave');
-    if (!saved) return false;
-    
-    try {
-        const parsed = JSON.parse(saved);
-        
-        // Check if this is actually a game save (has essential properties)
-        const requiredProps = ['count', 'coinsPerClick', 'upgradeLevel', 'rebirths'];
-        const hasRequiredProps = requiredProps.every(prop => prop in parsed);
-        
-        // Also check if player has made any progress
-        const hasProgress = parsed.count > 0 || parsed.totalClicks > 0 || parsed.rebirths > 0 || (parsed.unlockedSkins && parsed.unlockedSkins.length > 1);
-        
-        return hasRequiredProps && hasProgress;
-    } catch (error) {
-        return false;
-    }
-}
-
-function resetGameData() {
-    // Reset to default values
-    Object.assign(gameData, {
-        count: 0,
-        coinsPerClick: 1,
-        coinsPerSec: 0,
-        upgradeLevel: 0,
-        upgradeCost: 10,
-        rebirths: 0,
-        rebirthCost: 1000,
-        clickCombo: 0,
-        comboBoost: 1,
-        totalClicks: 0,
-        totalCoinsEarned: 0,
-        equippedSkin: 0,
-        unlockedSkins: [0],
-        tempBoosts: {},
-        shopItems: [],
-        shopPage: 0,
-        skinsPage: 0,
-        lastShopRefresh: Date.now(),
-        shopRefreshInterval: 600000,
-        theme: 'night',
-        tutorialCompleted: false
-    });
-    
-    saveGameData();
 }
 
 function exportSave() {
@@ -809,7 +805,13 @@ function importSave() {
     try {
         const saveData = atob(elements.importSaveText.value);
         const loaded = JSON.parse(saveData);
-        Object.assign(gameData, loaded);
+        
+        // Merge the imported save
+        Object.keys(gameData).forEach(key => {
+            if (loaded[key] !== undefined) {
+                gameData[key] = loaded[key];
+            }
+        });
         
         // Apply theme
         document.body.className = gameData.theme + '-theme';
@@ -830,6 +832,7 @@ function importSave() {
 
 function resetGame() {
     if (confirm('Are you sure you want to reset the game? All progress will be lost!')) {
+        // Clear both save and tutorial completion
         localStorage.removeItem('svlkClickerSave');
         localStorage.removeItem('tutorialCompleted');
         location.reload();
@@ -907,6 +910,7 @@ function setupAdminPanel() {
         }},
         { id: 'completeTutorial', text: 'Complete Tutorial', action: () => {
             gameData.tutorialCompleted = true;
+            elements.tutorialOverlay.style.display = 'none';
             saveGameData();
             alert('Tutorial marked as completed!');
         }}
@@ -924,10 +928,15 @@ function setupAdminPanel() {
     });
 }
 
-// Tutorial
+// Tutorial - FIXED VERSION
 function showTutorial() {
+    console.log("Showing tutorial");
     elements.tutorialOverlay.style.display = 'flex';
     document.getElementById('tutorialStep1').style.display = 'block';
+    // Hide other steps
+    document.getElementById('tutorialStep2').style.display = 'none';
+    document.getElementById('tutorialStep3').style.display = 'none';
+    document.getElementById('tutorialStep4').style.display = 'none';
 }
 
 function nextTutorialStep() {
@@ -950,40 +959,12 @@ function nextTutorialStep() {
 }
 
 function skipTutorial() {
+    console.log("Skipping tutorial");
     elements.tutorialOverlay.style.display = 'none';
     gameData.tutorialCompleted = true;
     isInitialized = true;
     saveGameData();
-}
-
-// Auto-scaling for small phones
-function adjustForScreenSize() {
-    const screenHeight = window.innerHeight;
-    const screenWidth = window.innerWidth;
-    
-    // Calculate scale factor based on screen height
-    let scale = 1;
-    
-    if (screenHeight < 500) {
-        scale = 0.8;
-    } else if (screenHeight < 600) {
-        scale = 0.85;
-    } else if (screenHeight < 700) {
-        scale = 0.9;
-    }
-    
-    // Adjust for very narrow screens
-    if (screenWidth < 360) {
-        scale *= 0.95;
-    }
-    
-    // Apply the scale
-    document.documentElement.style.setProperty('--dynamic-scale', scale);
-    
-    // Update UI if game is initialized
-    if (isInitialized) {
-        updateUI();
-    }
+    console.log("Tutorial marked as completed and saved");
 }
 
 // Initialize game when DOM is loaded
