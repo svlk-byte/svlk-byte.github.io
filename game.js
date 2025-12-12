@@ -26,7 +26,7 @@ const gameData = {
 // Game Constants
 const MAX_COMBO_CLICKS = 100;
 const MAX_MULTIPLIER = 3;
-const ITEMS_PER_PAGE = 7;
+const ITEMS_PER_PAGE = 4;
 const SHOP_ITEM_COUNT = 5;
 
 // Shop Items Database
