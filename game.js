@@ -1,4 +1,3 @@
-// Game Data Structure
 const gameData = {
     count: 0,
     coinsPerClick: 1,
@@ -18,30 +17,26 @@ const gameData = {
     shopPage: 0,
     skinsPage: 0,
     lastShopRefresh: Date.now(),
-    shopRefreshInterval: 600000, // 10 minutes
+    shopRefreshInterval: 600000,
     theme: 'night',
-    hasSeenTutorial: false // NEW: Track if tutorial was shown
+    hasSeenTutorial: false
 };
 
-// Game Constants
 const MAX_COMBO_CLICKS = 100;
 const MAX_MULTIPLIER = 3;
 const ITEMS_PER_PAGE = 4;
 const SHOP_ITEM_COUNT = 4;
 
-// Autoclicker
 let clickTimes = [];
 let clicksBlocked = false;
 let blockEndTime = 0;
 
-// Admin Panel
 let adminCodeAttempts = 0;
-const ADMIN_CODE = "AlbertPidor"; // Change this to any 4-digit code you want
+const ADMIN_CODE = "AlbertPidor";
 const MAX_ATTEMPTS = 3;
 let adminCodeLocked = false;
 let adminCodeLockUntil = 0;
 
-// Shop Items Database
 const shopItemsDB = [
     { name: "+1 Coin Per Click", effect: (gd) => gd.coinsPerClick++, cost: (gd) => Math.floor(50 * Math.pow(1.15, gd.coinsPerClick)), maxQty: 100 },
     { name: "+1 Coin/sec", effect: (gd) => gd.coinsPerSec++, cost: (gd) => Math.floor(75 * Math.pow(1.2, gd.coinsPerSec)), maxQty: 150 },
@@ -74,7 +69,6 @@ const shopItemsDB = [
     { name: "Quintuple Coins/sec (30min)", effect: (gd) => activateTempBoost('coinsPerSec', 5, 1800), cost: () => 10000000, maxQty: 1 },
 ];
 
-// Skins Database
 const skins = [
     { skin: "Skins/SvetlanaSkin.jpg", cost: 0, name: "🔢Svetlana (Free)", sound: "Sounds/SvetlanaSkin.mp3" },
     { skin: "Skins/LeshaSkin.jpg", cost: 1, name: "😍Lesha (1)", sound: "Sounds/LeshaSkin.mp3" },
@@ -88,15 +82,13 @@ const skins = [
     { skin: "Skins/DuraSkin.jpg", cost: 200000, name: "📑Dura (200000)", sound: "Sounds/DuraSkin.mp3" },
 ];
 
-// Game Variables
 let comboTimeout;
 let coinsPerSecInterval;
 let adminHoldTimeout;
 let isAdminHold = false;
-let isClickInProgress = false; // NEW: Prevent multiple clicks
-let clickStartTime = 0; // NEW: Track when click started
+let isClickInProgress = false;
+let clickStartTime = 0;
 
-// DOM Elements
 const elements = {
     coinCounter: document.getElementById('coinCounter'),
     comboCounter: document.getElementById('comboCounter'),
@@ -133,20 +125,18 @@ const elements = {
     clickSound: document.getElementById('clickSound')
 };
 
-// Initialize Game
 function initGame() {
     loadGameData();
     setupEventListeners();
     setupAdminCodeListeners();
     setupSound();
-    updateAllButtonImages(); // NEW: Initialize all button images
+    updateAllButtonImages();
     startCoinsPerSec();
     updateShopTimer();
     generateShopItems();
     updateUI();
     setupAdminPanel();
 
-    // Show tutorial only for new players who haven't seen it
     if (!gameData.hasSeenTutorial) {
         showTutorial();
         gameData.hasSeenTutorial = true;
@@ -154,9 +144,7 @@ function initGame() {
     }
 }
 
-// Setup Event Listeners - FIXED FOR CLICK ON RELEASE
 function setupEventListeners() {
-    // Main clicker - FIXED: Click on release
     elements.mainClicker.addEventListener('mousedown', handleClickStart);
     elements.mainClicker.addEventListener('touchstart', handleClickStart, { passive: true });
 
@@ -164,18 +152,14 @@ function setupEventListeners() {
     elements.mainClicker.addEventListener('touchend', handleClickEnd);
     elements.mainClicker.addEventListener('mouseleave', handleClickCancel);
 
-    // Prevent context menu on long press
     elements.mainClicker.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // Upgrade button
     elements.upgradeBtn.addEventListener('click', handleUpgrade);
     elements.upgradeBtn.addEventListener('touchstart', handleUpgrade, { passive: true });
 
-    // Rebirth button
     elements.rebirthBtn.addEventListener('click', handleRebirth);
     elements.rebirthBtn.addEventListener('touchstart', handleRebirth, { passive: true });
 
-    // Menu buttons
     document.getElementById('shopBtn').addEventListener('click', () => showModal('shopModal'));
     document.getElementById('skinsBtn').addEventListener('click', () => {
         showModal('skinsModal');
@@ -183,7 +167,6 @@ function setupEventListeners() {
     });
     document.getElementById('settingsBtn').addEventListener('click', () => showModal('settingsModal'));
 
-    // Modal close buttons
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.modal').forEach(modal => {
@@ -192,40 +175,34 @@ function setupEventListeners() {
         });
     });
 
-    // Click outside modal to close
     window.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
             e.target.style.display = 'none';
         }
     });
 
-    // Settings
     elements.themeSelect.addEventListener('change', handleThemeChange);
     elements.exportSave.addEventListener('click', exportSave);
     elements.importSave.addEventListener('click', importSave);
     elements.resetGame.addEventListener('click', resetGame);
     elements.refreshShop.addEventListener('click', forceShopRefresh);
 
-    // Pagination
     elements.shopPrev.addEventListener('click', () => changeShopPage(-1));
     elements.shopNext.addEventListener('click', () => changeShopPage(1));
     elements.skinsPrev.addEventListener('click', () => changeSkinsPage(-1));
     elements.skinsNext.addEventListener('click', () => changeSkinsPage(1));
 
-    // Tutorial
     document.querySelectorAll('.tutorial-next').forEach(btn => {
         btn.addEventListener('click', nextTutorialStep);
     });
 }
 
-// NEW: Click handling for click-on-release
 function handleClickStart(e) {
     e.preventDefault();
     if (!isClickInProgress) {
         isClickInProgress = true;
         clickStartTime = Date.now();
 
-        // Visual feedback on press
         elements.mainClicker.style.transform = 'scale(0.98)';
     }
 }
@@ -236,15 +213,12 @@ function handleClickEnd(e) {
     e.preventDefault();
     isClickInProgress = false;
 
-    // Calculate click duration (for future features)
     const clickDuration = Date.now() - clickStartTime;
 
-    // Only register as click if it was a short press (not a hold)
     if (clickDuration < 500) {
         handleActualClick();
     }
 
-    // Reset visual feedback
     elements.mainClicker.style.transform = 'scale(1)';
 }
 
@@ -255,7 +229,6 @@ function handleClickCancel() {
     }
 }
 
-// Autoclicker Detection
 const CLICK_THRESHOLD = 5;
 const TIME_THRESHOLD = 1000;
 const MIN_INTERVAL = 50;
@@ -266,12 +239,10 @@ function detectAutoclicker() {
     const now = Date.now();
     clickTimes.push(now);
 
-    // Keep only recent click times
     if (clickTimes.length > Math.max(CLICK_THRESHOLD, CONSISTENT_THRESHOLD)) {
         clickTimes.shift();
     }
 
-    // Check for too many clicks in too short time
     if (clickTimes.length >= CLICK_THRESHOLD) {
         const timeSpan = clickTimes[clickTimes.length - 1] - clickTimes[clickTimes.length - CLICK_THRESHOLD];
         if (timeSpan < TIME_THRESHOLD && (timeSpan / (CLICK_THRESHOLD - 1)) < MIN_INTERVAL) {
@@ -280,7 +251,6 @@ function detectAutoclicker() {
         }
     }
 
-    // Check for perfectly consistent clicking patterns
     if (clickTimes.length >= CONSISTENT_THRESHOLD) {
         const intervals = clickTimes.slice(-CONSISTENT_THRESHOLD).map((t, i, arr) =>
             i > 0 ? t - arr[i - 1] : null
@@ -288,7 +258,6 @@ function detectAutoclicker() {
 
         const avg = intervals.reduce((a, b) => a + b) / intervals.length;
 
-        // Check if all intervals are nearly identical (autoclicker signature)
         if (intervals.every(i => Math.abs(i - avg) <= INTERVAL_TOLERANCE)) {
             blockClicksFor3sec();
             return true;
@@ -300,69 +269,55 @@ function detectAutoclicker() {
 
 function blockClicksFor3sec() {
     clicksBlocked = true;
-    blockEndTime = Date.now() + 3000; // 3 seconds
+    blockEndTime = Date.now() + 3000;
 
-    // Auto-unblock after 3 seconds
     setTimeout(() => {
         clicksBlocked = false;
-        clickTimes = []; // Reset click history after blocking
+        clickTimes = [];
     }, 3000);
 }
 
 function handleActualClick() {
-    // Check if clicks are currently blocked
     if (clicksBlocked) {
-        return; // Do nothing if blocked
+        return;
     }
 
-    // Detect autoclicker BEFORE processing the click
     if (detectAutoclicker()) {
-        return; // Don't process this click if autoclicker detected
+        return;
     }
 
-    // Rest of your existing click handling code...
     let coinsEarned = gameData.coinsPerClick;
 
-    // Apply rebirth multiplier
     const rebirthMultiplier = 1 + (gameData.rebirths * 0.5);
     coinsEarned *= rebirthMultiplier;
 
-    // Apply combo multiplier
     updateCombo();
     const comboMultiplier = getComboMultiplier();
     coinsEarned *= comboMultiplier;
 
-    // Apply temporary boosts
     if (gameData.tempBoosts.coinsPerClick) {
         coinsEarned *= gameData.tempBoosts.coinsPerClick.multiplier;
     }
 
-    // Round to nearest integer
     coinsEarned = Math.floor(coinsEarned);
 
-    // Update game data
     gameData.count += coinsEarned;
     gameData.totalClicks++;
     gameData.totalCoinsEarned += coinsEarned;
 
-    // Play sound
     playClickSound();
 
-    // Show feedback
     showClickFeedback(coinsEarned);
 
-    // Update UI
     updateUI();
     saveGameData();
 }
 
-// Setup Sound
 function setupSound() {
     elements.clickSound.volume = 0.3;
     updateSound();
 }
 
-// Update Sound based on current skin
 function updateSound() {
     const currentSkin = skins[gameData.equippedSkin];
     if (currentSkin && currentSkin.sound) {
@@ -371,29 +326,24 @@ function updateSound() {
     }
 }
 
-// FIXED: Function to update all button images dynamically
 function updateAllButtonImages() {
     const currentSkin = skins[gameData.equippedSkin];
 
     if (!currentSkin) return;
 
-    // Update main clicker button background
     elements.mainClicker.style.backgroundImage = `url('${currentSkin.skin}')`;
 
-    // Update upgrade button image
     const upgradeImg = elements.upgradeBtn.querySelector('img');
     if (upgradeImg) {
         upgradeImg.src = currentSkin.skin;
     }
 
-    // Update rebirth button image
     const rebirthImg = elements.rebirthBtn.querySelector('img');
     if (rebirthImg) {
         rebirthImg.src = currentSkin.skin;
     }
 }
 
-// Play Click Sound
 function playClickSound() {
     if (elements.clickSound.paused) {
         elements.clickSound.play().catch(e => console.log("Audio play failed:", e));
@@ -402,7 +352,6 @@ function playClickSound() {
     }
 }
 
-// Show Click Feedback
 function showClickFeedback(amount) {
     const feedback = document.createElement('div');
     feedback.className = 'click-feedback';
@@ -417,7 +366,6 @@ function showClickFeedback(amount) {
     }, 1000);
 }
 
-// Handle Upgrade
 function handleUpgrade(e) {
     e.preventDefault();
     if (gameData.count >= gameData.upgradeCost) {
@@ -425,13 +373,11 @@ function handleUpgrade(e) {
         gameData.upgradeLevel++;
         gameData.coinsPerClick++;
 
-        // Increase upgrade cost
         gameData.upgradeCost = Math.floor(10 * Math.pow(gameData.upgradeLevel, 2)) || 10;
 
         updateUI();
         saveGameData();
 
-        // Visual feedback
         elements.upgradeBtn.style.transform = 'scale(0.95)';
         setTimeout(() => {
             elements.upgradeBtn.style.transform = 'scale(1)';
@@ -439,7 +385,6 @@ function handleUpgrade(e) {
     }
 }
 
-// Handle Rebirth
 function handleRebirth(e) {
     e.preventDefault();
     if (gameData.count >= gameData.rebirthCost) {
@@ -449,13 +394,11 @@ function handleRebirth(e) {
         gameData.upgradeCost = 10;
         gameData.rebirths++;
 
-        // Increase rebirth cost
         gameData.rebirthCost = Math.floor(1000000 * Math.pow(2, gameData.rebirths));
 
         updateUI();
         saveGameData();
 
-        // Visual feedback
         elements.rebirthBtn.style.transform = 'scale(0.95)';
         setTimeout(() => {
             elements.rebirthBtn.style.transform = 'scale(1)';
@@ -463,7 +406,6 @@ function handleRebirth(e) {
     }
 }
 
-// Combo System
 function updateCombo() {
     gameData.clickCombo = Math.min(gameData.clickCombo + 1, MAX_COMBO_CLICKS);
     clearTimeout(comboTimeout);
@@ -478,7 +420,6 @@ function getComboMultiplier() {
     return Math.min(Math.floor(gameData.clickCombo / (MAX_COMBO_CLICKS / (MAX_MULTIPLIER - 1))) + 1, MAX_MULTIPLIER) * gameData.comboBoost;
 }
 
-// Temporary Boosts
 function activateTempBoost(stat, multiplier, duration) {
     gameData.tempBoosts[stat] = {
         multiplier: multiplier,
@@ -495,16 +436,13 @@ function activateTempBoost(stat, multiplier, duration) {
     saveGameData();
 }
 
-// Shop Functions
 function generateShopItems() {
     const now = Date.now();
 
-    // Refresh shop if needed
     if (now - gameData.lastShopRefresh >= gameData.shopRefreshInterval || !gameData.shopItems.length) {
         gameData.shopItems = [];
         gameData.lastShopRefresh = now;
 
-        // Select random shop items
         const availableItems = [...shopItemsDB];
         for (let i = 0; i < SHOP_ITEM_COUNT && availableItems.length > 0; i++) {
             const randomIndex = Math.floor(Math.random() * availableItems.length);
@@ -558,7 +496,6 @@ function updateShopUI() {
         elements.shopItems.appendChild(itemElement);
     });
 
-    // Update pagination
     elements.shopPage.textContent = `Page ${gameData.shopPage + 1}`;
     elements.shopPrev.disabled = gameData.shopPage === 0;
     elements.shopNext.disabled = endIndex >= gameData.shopItems.length;
@@ -582,7 +519,7 @@ function buyShopItem(index) {
 function forceShopRefresh() {
     if (gameData.count >= 1000) {
         gameData.count -= 1000;
-        gameData.lastShopRefresh = 0; // Force refresh
+        gameData.lastShopRefresh = 0;
         generateShopItems();
         updateUI();
         saveGameData();
@@ -613,7 +550,6 @@ function changeShopPage(delta) {
     }
 }
 
-// Skins Functions
 function updateSkinsUI() {
     const startIndex = gameData.skinsPage * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -641,7 +577,6 @@ function updateSkinsUI() {
         elements.skinsContainer.appendChild(skinElement);
     });
 
-    // Update pagination
     elements.skinsPage.textContent = `Page ${gameData.skinsPage + 1}`;
     elements.skinsPrev.disabled = gameData.skinsPage === 0;
     elements.skinsNext.disabled = endIndex >= skins.length;
@@ -650,7 +585,7 @@ function updateSkinsUI() {
 function equipSkin(index) {
     if (gameData.unlockedSkins.includes(index)) {
         gameData.equippedSkin = index;
-        updateAllButtonImages(); // FIXED: Update all button images
+        updateAllButtonImages();
         updateSound();
         updateSkinsUI();
         saveGameData();
@@ -678,28 +613,22 @@ function changeSkinsPage(delta) {
     }
 }
 
-// Update UI
 function updateUI() {
-    // Format numbers with commas
     elements.coinCounter.textContent = formatNumber(gameData.count);
     elements.comboCounter.textContent = `Combo: ${gameData.clickCombo}x${getComboMultiplier().toFixed(1)}`;
 
-    // Update upgrade button
     elements.upgradeCost.textContent = `Cost: ${formatNumber(gameData.upgradeCost)}`;
     elements.upgradeLevel.textContent = `Level: ${gameData.upgradeLevel}`;
     elements.upgradeBtn.disabled = gameData.count < gameData.upgradeCost;
 
-    // Update rebirth button
     elements.rebirthCost.textContent = `Cost: ${formatNumber(gameData.rebirthCost)}`;
     elements.rebirthLevel.textContent = `Rebirths: ${gameData.rebirths}`;
     elements.rebirthBtn.disabled = gameData.count < gameData.rebirthCost;
 
-    // Update other UI elements
     updateShopTimer();
     updateShopUI();
 }
 
-// Format Numbers
 function formatNumber(num, decimals = 2) {
     if (num === null || num === undefined || !isFinite(num)) return '0';
     if (num < 1000) return Math.floor(num).toString();
@@ -708,7 +637,7 @@ function formatNumber(num, decimals = 2) {
         '', 'K', 'M', 'B', 'T',
         'Qa', 'Qi', 'Sx', 'Sp', 'Oc',
         'N', 'D', 'Ud', 'Dd', 'Td',
-        'Qd', 'Qt', 'Sd', 'Ud', 'Dd', // reuse creatively
+        'Qd', 'Qt', 'Sd', 'Ud', 'Dd',
         'Vt', 'Uv', 'Dv', 'Tv', 'Qtv', 'Qiv'
     ];
 
@@ -721,7 +650,6 @@ function formatNumber(num, decimals = 2) {
     return scaled.toFixed(decimals).replace(/\.0+$/, '') + suffix;
 }
 
-// Start Coins Per Second
 function startCoinsPerSec() {
     if (coinsPerSecInterval) clearInterval(coinsPerSecInterval);
 
@@ -729,11 +657,9 @@ function startCoinsPerSec() {
         if (gameData.coinsPerSec > 0) {
             let coinsEarned = gameData.coinsPerSec;
 
-            // Apply rebirth multiplier
             const rebirthMultiplier = 1 + (gameData.rebirths * 0.5);
             coinsEarned *= rebirthMultiplier;
 
-            // Apply temporary boosts
             if (gameData.tempBoosts.coinsPerSec) {
                 coinsEarned *= gameData.tempBoosts.coinsPerSec.multiplier;
             }
@@ -747,7 +673,6 @@ function startCoinsPerSec() {
     }, 1000);
 }
 
-// Show Modal
 function showModal(modalId) {
     document.querySelectorAll('.modal').forEach(modal => {
         modal.style.display = 'none';
@@ -756,7 +681,6 @@ function showModal(modalId) {
     document.getElementById(modalId).style.display = 'flex';
 }
 
-// Theme Handling
 function handleThemeChange() {
     const theme = elements.themeSelect.value;
     document.body.className = theme + '-theme';
@@ -764,7 +688,6 @@ function handleThemeChange() {
     saveGameData();
 }
 
-// Save System - FIXED: Includes hasSeenTutorial
 function saveGameData() {
     localStorage.setItem('svlkClickerSave', JSON.stringify(gameData));
 }
@@ -776,18 +699,15 @@ function loadGameData() {
             const loaded = JSON.parse(saved);
             Object.assign(gameData, loaded);
 
-            // Backward compatibility: Add hasSeenTutorial if missing
             if (gameData.hasSeenTutorial === undefined) {
-                gameData.hasSeenTutorial = true; // Old players have seen tutorial
+                gameData.hasSeenTutorial = true;
             }
 
-            // Apply theme
             document.body.className = gameData.theme + '-theme';
             elements.themeSelect.value = gameData.theme;
 
         } catch (error) {
             console.error("Error loading save data:", error);
-            // Keep default gameData
         }
     }
 }
@@ -803,11 +723,9 @@ function importSave() {
         const loaded = JSON.parse(saveData);
         Object.assign(gameData, loaded);
 
-        // Apply theme
         document.body.className = gameData.theme + '-theme';
         elements.themeSelect.value = gameData.theme;
 
-        // Update images and UI
         updateAllButtonImages();
         updateSound();
 
@@ -827,16 +745,13 @@ function resetGame() {
     }
 }
 
-// Admin Panel
 function setupAdminCodeListeners() {
-    // Coin counter hold for 5 seconds shows code input
     elements.coinCounter.addEventListener('mousedown', startAdminCodeHold);
     elements.coinCounter.addEventListener('touchstart', startAdminCodeHold);
     elements.coinCounter.addEventListener('mouseup', cancelAdminCodeHold);
     elements.coinCounter.addEventListener('touchend', cancelAdminCodeHold);
     elements.coinCounter.addEventListener('mouseleave', cancelAdminCodeHold);
 
-    // Admin code submission
     document.getElementById('submitAdminCode').addEventListener('click', submitAdminCode);
     document.getElementById('adminCodeInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -844,14 +759,12 @@ function setupAdminCodeListeners() {
         }
     });
 
-    // Close admin code modal
     document.querySelector('#adminCodeModal .close-modal').addEventListener('click', () => {
         document.getElementById('adminCodeModal').style.display = 'none';
         resetCodeInput();
     });
 }
 
-// Admin Code Hold Functions
 function startAdminCodeHold() {
     adminHoldTimeout = setTimeout(() => {
         if (!adminCodeLocked || Date.now() > adminCodeLockUntil) {
@@ -865,7 +778,6 @@ function cancelAdminCodeHold() {
 }
 
 function showAdminCodeModal() {
-    // Check if locked
     if (adminCodeLocked && Date.now() < adminCodeLockUntil) {
         const remainingTime = Math.ceil((adminCodeLockUntil - Date.now()) / 1000);
         alert(`Admin access locked. Try again in ${remainingTime} seconds.`);
@@ -882,7 +794,6 @@ function submitAdminCode() {
     const errorElement = document.getElementById('codeError');
     const enteredCode = codeInput.value;
 
-    // Check if locked
     if (adminCodeLocked && Date.now() < adminCodeLockUntil) {
         const remainingTime = Math.ceil((adminCodeLockUntil - Date.now()) / 1000);
         errorElement.textContent = `Locked. Try again in ${remainingTime} seconds.`;
@@ -890,31 +801,26 @@ function submitAdminCode() {
     }
 
     if (enteredCode === ADMIN_CODE) {
-        // Correct code
         adminCodeAttempts = 0;
         adminCodeLocked = false;
         document.getElementById('adminCodeModal').style.display = 'none';
         resetCodeInput();
-        showModal('adminModal'); // Show actual admin panel
+        showModal('adminModal');
     } else {
-        // Incorrect code
         adminCodeAttempts++;
         errorElement.textContent = `Incorrect code. Attempts: ${adminCodeAttempts}/${MAX_ATTEMPTS}`;
 
-        // Add vibration effect
         codeInput.classList.add('vibrate');
         setTimeout(() => {
             codeInput.classList.remove('vibrate');
         }, 300);
 
-        // Clear input
         codeInput.value = '';
         codeInput.focus();
 
-        // Lock after max attempts
         if (adminCodeAttempts >= MAX_ATTEMPTS) {
             adminCodeLocked = true;
-            adminCodeLockUntil = Date.now() + 30000; // Lock for 30 seconds
+            adminCodeLockUntil = Date.now() + 30000;
             errorElement.textContent = `Too many attempts! Locked for 30 seconds.`;
             codeInput.disabled = true;
 
@@ -967,7 +873,6 @@ function setupAdminPanel() {
         elements.adminContainer.appendChild(fieldElement);
     });
 
-    // Add utility buttons
     const utilityButtons = [
         {
             id: 'unlockAllSkins', text: 'Unlock All Skins', action: () => {
@@ -1009,7 +914,6 @@ function setupAdminPanel() {
     });
 }
 
-// Tutorial - FIXED: Only shows for new players
 function showTutorial() {
     elements.tutorialOverlay.style.display = 'flex';
     document.getElementById('tutorialStep1').style.display = 'block';
@@ -1033,8 +937,6 @@ function nextTutorialStep() {
     }
 }
 
-// Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', initGame);
 
-// Auto-save every 30 seconds
 setInterval(saveGameData, 30000);

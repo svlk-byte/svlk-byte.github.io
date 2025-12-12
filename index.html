@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -8,13 +7,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body class="night-theme">
-    <!-- Main Game Interface -->
     <div class="game-container">
-        <!-- Top Bar -->
         <div class="top-bar">
-            <!-- Left side buttons -->
             <div class="top-left">
                 <button id="shopBtn" class="menu-btn" title="Shop">
                     <i class="fas fa-store"></i>
@@ -27,22 +22,18 @@
                 </button>
             </div>
 
-            <!-- Right side counters -->
             <div class="top-right">
                 <div class="counter" id="coinCounter">0</div>
                 <div class="combo-counter" id="comboCounter">Combo: 0x</div>
             </div>
         </div>
 
-        <!-- Main Clicker Button -->
         <div class="clicker-area">
             <button id="mainClicker" class="clicker-button"></button>
             <div class="click-feedback" id="clickFeedback"></div>
         </div>
 
-        <!-- Bottom Bar -->
         <div class="bottom-bar">
-            <!-- Left side - Rebirth -->
             <div class="upgrade-container left">
                 <div class="upgrade-info">
                     <div class="upgrade-cost" id="rebirthCost">Cost: 1000</div>
@@ -54,7 +45,6 @@
                 </button>
             </div>
 
-            <!-- Right side - Upgrade -->
             <div class="upgrade-container right">
                 <div class="upgrade-info">
                     <div class="upgrade-cost" id="upgradeCost">Cost: 10</div>
@@ -68,7 +58,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
     <div id="shopModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -159,7 +148,6 @@
         </div>
     </div>
 
-    <!-- Tutorial Overlay -->
     <div id="tutorialOverlay" class="tutorial-overlay" style="display:none;">
         <div class="tutorial-step" id="tutorialStep1">
             <h3>Welcome to Svlk-Byte Clicker!</h3>
@@ -183,9 +171,7 @@
         </div>
     </div>
 
-    <!-- Audio Element -->
     <audio id="clickSound" loop></audio>
-
     <script src="game.js"></script>
 </body>
 
