@@ -29,13 +29,10 @@ const MAX_MULTIPLIER = 3;
 const ITEMS_PER_PAGE = 4;
 const SHOP_ITEM_COUNT = 5;
 
-// Add these with other game variables
+// Autoclicker
 let clickTimes = [];
 let clicksBlocked = false;
 let blockEndTime = 0;
-let clickIntervals = [];
-let humanClickPattern = [];
-let lastClickTime = 0;
 
 // Shop Items Database
 const shopItemsDB = [
@@ -347,82 +344,43 @@ function detectAutoclicker() {
         const sample = clickIntervals.slice(-AUTO_CLICK_DETECTION.SAMPLE_SIZE);
         const mean = sample.reduce((a, b) => a + b) / sample.length;
         
-        // Calculate standard deviation
-        const squaredDiffs = sample.map(value => Math.pow(value - mean, 2));
-        const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b) / sample.length;
-        const stdev = Math.sqrt(avgSquaredDiff);
-        
-        // Autoclickers have very low standard deviation
-        if (stdev < AUTO_CLICK_DETECTION.STDEV_THRESHOLD && mean < AUTO_CLICK_DETECTION.MEAN_THRESHOLD) {
+// Autoclicker Detection
+const CLICK_THRESHOLD = 10;
+const TIME_THRESHOLD = 1000;
+const MIN_INTERVAL = 50;
+const CONSISTENT_THRESHOLD = 20;
+const INTERVAL_TOLERANCE = 5;
+
+function detectAutoclicker() {
+    const now = Date.now();
+    clickTimes.push(now);
+    
+    // Keep only recent click times
+    if (clickTimes.length > Math.max(CLICK_THRESHOLD, CONSISTENT_THRESHOLD)) {
+        clickTimes.shift();
+    }
+    
+    // Check for too many clicks in too short time
+    if (clickTimes.length >= CLICK_THRESHOLD) {
+        const timeSpan = clickTimes[clickTimes.length - 1] - clickTimes[clickTimes.length - CLICK_THRESHOLD];
+        if (timeSpan < TIME_THRESHOLD && (timeSpan / (CLICK_THRESHOLD - 1)) < MIN_INTERVAL) {
             blockClicksFor3sec();
             return true;
         }
     }
     
-    // === DETECTION METHOD 4: Human Pattern Validation ===
-    // Humans can't maintain perfect acceleration/deceleration patterns
-    if (clickIntervals.length >= 8) {
-        const recent = clickIntervals.slice(-8);
+    // Check for perfectly consistent clicking patterns
+    if (clickTimes.length >= CONSISTENT_THRESHOLD) {
+        const intervals = clickTimes.slice(-CONSISTENT_THRESHOLD).map((t, i, arr) => 
+            i > 0 ? t - arr[i - 1] : null
+        ).slice(1);
         
-        // Check for unnatural acceleration patterns
-        let unnaturalPatterns = 0;
-        for (let i = 1; i < recent.length - 1; i++) {
-            const ratio = recent[i] / recent[i-1];
-            
-            // Humans don't have perfectly consistent acceleration/deceleration
-            if (ratio < AUTO_CLICK_DETECTION.HUMAN_ACCELERATION_LIMIT || 
-                ratio > AUTO_CLICK_DETECTION.HUMAN_DECELERATION_LIMIT) {
-                unnaturalPatterns++;
-            }
-        }
+        const avg = intervals.reduce((a, b) => a + b) / intervals.length;
         
-        // If more than half the patterns look unnatural
-        if (unnaturalPatterns > recent.length / 2) {
+        // Check if all intervals are nearly identical (autoclicker signature)
+        if (intervals.every(i => Math.abs(i - avg) <= INTERVAL_TOLERANCE)) {
             blockClicksFor3sec();
             return true;
-        }
-    }
-    
-    // === DETECTION METHOD 5: Variability Check ===
-    // Humans have natural variability in click timing
-    if (clickIntervals.length >= 10) {
-        const recent = clickIntervals.slice(-10);
-        const minInterval = Math.min(...recent);
-        const maxInterval = Math.max(...recent);
-        const variability = maxInterval - minInterval;
-        
-        // If variability is too low for the speed range, it's suspicious
-        const avgInterval = recent.reduce((a, b) => a + b) / recent.length;
-        
-        if (avgInterval < 100 && variability < AUTO_CLICK_DETECTION.HUMAN_VARIABILITY_MIN) {
-            // Too consistent at high speed
-            blockClicksFor3sec();
-            return true;
-        }
-        
-        if (avgInterval < 200 && variability < AUTO_CLICK_DETECTION.HUMAN_VARIABILITY_MIN * 1.5) {
-            // Too consistent at medium speed
-            blockClicksFor3sec();
-            return true;
-        }
-    }
-    
-    // === BURST HANDLING ===
-    // Allow occasional bursts of fast clicking
-    const fastClicks = clickIntervals.filter(interval => interval < 60).length;
-    if (fastClicks > AUTO_CLICK_DETECTION.BURST_ALLOWANCE * 2) {
-        // Check time since last burst
-        if (now - AUTO_CLICK_DETECTION.lastBurstTime < AUTO_CLICK_DETECTION.BURST_COOLDOWN) {
-            // Too many bursts too close together
-            blockClicksFor3sec();
-            return true;
-        } else {
-            // Record burst time and allow it
-            AUTO_CLICK_DETECTION.lastBurstTime = now;
-            
-            // Clear some history to prevent cascade detection
-            clickIntervals = clickIntervals.slice(-5);
-            clickTimes = clickTimes.slice(-5);
         }
     }
     
@@ -431,32 +389,22 @@ function detectAutoclicker() {
 
 function blockClicksFor3sec() {
     clicksBlocked = true;
-    blockEndTime = Date.now() + 3000;
-    
-    // Clear detection data to prevent re-triggering immediately
-    clickTimes = [];
-    clickIntervals = [];
-    lastClickTime = 0;
+    blockEndTime = Date.now() + 3000; // 3 seconds
     
     // Auto-unblock after 3 seconds
     setTimeout(() => {
         clicksBlocked = false;
-        // Add a small grace period after unblock
-        setTimeout(() => {
-            clickTimes = [];
-            clickIntervals = [];
-            lastClickTime = 0;
-        }, 1000);
+        clickTimes = []; // Reset click history after blocking
     }, 3000);
 }
-
+        
 function handleActualClick() {
     // Check if clicks are currently blocked
     if (clicksBlocked) {
         return; // Do nothing if blocked
     }
     
-    // Enhanced autoclicker detection
+    // Detect autoclicker BEFORE processing the click
     if (detectAutoclicker()) {
         return; // Don't process this click if autoclicker detected
     }
