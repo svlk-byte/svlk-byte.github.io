@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Svlk-Byte Clicker</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -34,11 +34,8 @@
         
         <!-- Main Clicker Button -->
         <div class="clicker-area">
-            <button id="mainClicker" class="clicker-button">
-                <!-- Background image will be set via CSS -->
-            </button>
+            <button id="mainClicker" class="clicker-button"></button>
             <div class="click-feedback" id="clickFeedback"></div>
-            <div class="screen-overlay"></div>
         </div>
         
         <!-- Bottom Bar -->
@@ -146,38 +143,26 @@
     </div>
     
     <!-- Tutorial Overlay -->
-    <div id="tutorialOverlay" class="tutorial-overlay" style="display: none;">
+    <div id="tutorialOverlay" class="tutorial-overlay" style="display:none;">
         <div class="tutorial-step" id="tutorialStep1">
             <h3>Welcome to Svlk-Byte Clicker!</h3>
             <p>Tap the big button in the center to earn coins.</p>
-            <div class="tutorial-buttons">
-                <button class="tutorial-next">Next</button>
-                <button class="tutorial-skip">Skip Tutorial</button>
-            </div>
+            <button class="tutorial-next">Next</button>
         </div>
         <div class="tutorial-step" id="tutorialStep2" style="display:none;">
             <h3>Upgrade Button</h3>
             <p>Buy upgrades to earn more coins per click.</p>
-            <div class="tutorial-buttons">
-                <button class="tutorial-next">Next</button>
-                <button class="tutorial-skip">Skip Tutorial</button>
-            </div>
+            <button class="tutorial-next">Next</button>
         </div>
         <div class="tutorial-step" id="tutorialStep3" style="display:none;">
             <h3>Rebirth System</h3>
             <p>Rebirth resets your progress but gives a permanent multiplier!</p>
-            <div class="tutorial-buttons">
-                <button class="tutorial-next">Next</button>
-                <button class="tutorial-skip">Skip Tutorial</button>
-            </div>
+            <button class="tutorial-next">Next</button>
         </div>
         <div class="tutorial-step" id="tutorialStep4" style="display:none;">
             <h3>Combo System</h3>
             <p>Click rapidly to build combo and earn bonus coins!</p>
-            <div class="tutorial-buttons">
-                <button class="tutorial-next">Got it!</button>
-                <button class="tutorial-skip">Skip Tutorial</button>
-            </div>
+            <button class="tutorial-next">Got it!</button>
         </div>
     </div>
     
