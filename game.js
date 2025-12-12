@@ -29,10 +29,13 @@ const MAX_MULTIPLIER = 3;
 const ITEMS_PER_PAGE = 4;
 const SHOP_ITEM_COUNT = 5;
 
-// Autoclick variables
+// Add these with other game variables
 let clickTimes = [];
 let clicksBlocked = false;
 let blockEndTime = 0;
+let clickIntervals = [];
+let humanClickPattern = [];
+let lastClickTime = 0;
 
 // Shop Items Database
 const shopItemsDB = [
