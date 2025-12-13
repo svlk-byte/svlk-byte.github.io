@@ -870,50 +870,40 @@ function loadGameData() {
 }
 
 function getTelemetryId() {
-    const fingerprint = [
+    let telemetryId = localStorage.getItem('svlkTelemetryId');
+    if (telemetryId) return telemetryId;
+
+    const components = [
         navigator.userAgent || '',
         navigator.language || '',
-        navigator.hardwareConcurrency || 0,
+        navigator.platform || '',
         screen.width || 0,
         screen.height || 0,
         screen.colorDepth || 0,
-        screen.pixelDepth || 0,
+        navigator.hardwareConcurrency || 0,
         navigator.maxTouchPoints || 0,
         Intl.DateTimeFormat().resolvedOptions().timeZone || '',
         navigator.cookieEnabled ? '1' : '0',
         navigator.doNotTrack || '0',
-        window.devicePixelRatio || 1,
-        navigator.onLine ? '1' : '0',
-        screen.availWidth || 0,
-        screen.availHeight || 0
-    ].join('|');
-    
+        window.devicePixelRatio || 1
+    ];
+
+    const fingerprint = components.join('|');
+
     function hashString(str) {
-        let hash = 0;
-        if (str.length === 0) return hash;
-        
+        let hash = 5381;
         for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
+            hash = ((hash << 5) + hash) + str.charCodeAt(i);
+            hash = hash & 0xffffffff;
         }
-        
-        hash = ((hash >>> 16) ^ hash) * 0x45d9f3b;
-        hash = ((hash >>> 16) ^ hash) * 0x45d9f3b;
-        hash = (hash >>> 16) ^ hash;
-        
         return Math.abs(hash);
     }
-    
-    const hash1 = hashString(fingerprint);
-    const hash2 = hashString(fingerprint.split('').reverse().join(''));
-    const hash3 = hashString(fingerprint.substring(Math.floor(fingerprint.length / 2)) + fingerprint.substring(0, Math.floor(fingerprint.length / 2)));
-    
-    const combinedHash = (hash1.toString(36) + hash2.toString(36) + hash3.toString(36)).replace(/[^a-z0-9]/g, '').substring(0, 32);
-    const telemetryId = combinedHash.padEnd(32, '0').substring(0, 32);
-    
+
+    const hash1 = hashString(fingerprint).toString(36);
+    const hash2 = hashString(fingerprint.split('').reverse().join('')).toString(36);
+    telemetryId = (hash1 + hash2).padEnd(32, '0').substring(0, 32);
+
     localStorage.setItem('svlkTelemetryId', telemetryId);
-    
     return telemetryId;
 }
 
