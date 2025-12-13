@@ -459,10 +459,19 @@ body {
     font-size: 0.9rem;
 }
 
+.skin-cost-container {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
 .skin-cost {
     color: #ffd700;
     font-weight: 600;
-    font-size: 0.8rem;
+}
+
+.skin-cost-blue {
+    color: #2196F3;
+    font-weight: 600;
 }
 
 .settings-container {

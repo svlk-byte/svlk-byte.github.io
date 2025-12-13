@@ -13,6 +13,7 @@ const gameData = {
     totalCoinsEarned: 0,
     equippedSkin: 0,
     unlockedSkins: [0],
+    skinsBoughtWithRebirths: [],
     tempBoosts: {},
     shopItems: [],
     shopPage: 0,
@@ -72,15 +73,23 @@ const shopItemsDB = [
 ];
 
 const skins = [
-    { skin: "Skins/SvetlanaSkin.jpg", cost: 0, name: "🔢Svetlana", sound: "Sounds/SvetlanaSkin.mp3" },
-    { skin: "Skins/LeshaSkin.jpg", cost: 1, name: "😍Lesha", sound: "Sounds/LeshaSkin.mp3" },
-    { skin: "Skins/Lesha2Skin.jpg", cost: 2, name: "👅Lesha2", sound: "Sounds/Lesha2Skin.mp3" },
-    { skin: "Skins/RomanSkin.jpg", cost: 10000, name: "👨‍❤️‍👨Roman", sound: "Sounds/RomanSkin.mp3" },
-    { skin: "Skins/ElenaSkin.jpg", cost: 30000, name: "🦛Elena", sound: "Sounds/ElenaSkin.mp3" },
-    { skin: "Skins/KirillSkin.jpg", cost: 50000, name: "🪨Kirill", sound: "Sounds/KirillSkin.mp3" },
-    { skin: "Skins/MatveiSkin.jpg", cost: 75000, name: "🍖Matvei", sound: "Sounds/MatveiSkin.mp3" },
-    { skin: "Skins/FilipinkoSkin.jpg", cost: 100000, name: "🎨Fillipinko", sound: "Sounds/FilipinkoSkin.mp3" },
-    { skin: "Skins/DuraSkin.jpg", cost: 200000, name: "📑Dura", sound: "Sounds/DuraSkin.mp3" },
+    { skin: "Skins/SvetlanaSkin.jpg", coinCost: 0, rebirthCost: undefined, name: "🔢Svetlana", sound: "Sounds/SvetlanaSkin.mp3" },
+    { skin: "Skins/LeshaSkin.jpg", coinCost: 1, rebirthCost: undefined, name: "😍Lesha", sound: "Sounds/LeshaSkin.mp3" },
+    { skin: "Skins/Lesha2Skin.jpg", coinCost: 2, rebirthCost: undefined, name: "👅Lesha2", sound: "Sounds/Lesha2Skin.mp3" },
+    { skin: "Skins/SensovaSkin.jpg", coinCost: 100, rebirthCost: undefined, name: "🐦Sensova", sound: "Sounds/SensovaSkin.mp3" },
+    { skin: "Skins/RomanSkin.jpg", coinCost: 10000, rebirthCost: undefined, name: "👨‍❤️‍👨Roman", sound: "Sounds/RomanSkin.mp3" },
+    { skin: "Skins/ElenaSkin.jpg", coinCost: 30000, rebirthCost: undefined, name: "🦛Elena", sound: "Sounds/ElenaSkin.mp3" },
+    { skin: "Skins/KirillSkin.jpg", coinCost: 50000, rebirthCost: undefined, name: "🪨Kirill", sound: "Sounds/KirillSkin.mp3" },
+    { skin: "Skins/MatveiSkin.jpg", coinCost: 100000, rebirthCost: undefined, name: "🍖Matvei", sound: "Sounds/MatveiSkin.mp3" },
+    { skin: "Skins/FilipinkoSkin.jpg", coinCost: 200000, rebirthCost: undefined, name: "🎨Fillipinko", sound: "Sounds/FilipinkoSkin.mp3" },
+    { skin: "Skins/SofiaSkin.jpg", coinCost: 350000, rebirthCost: undefined, name: "👑Sofia", sound: "Sounds/SofiaSkin.mp3" },
+    { skin: "Skins/BioSkin.jpg", coinCost: 500000, rebirthCost: undefined, name: "🥑BioAvocado", sound: "Sounds/BioSkin.mp3" },
+    { skin: "Skins/VinogradikSkin.jpg", coinCost: undefined, rebirthCost: 1, name: "🍇Vinogradik", sound: "Sounds/VinogradikSkin.mp3" },
+    { skin: "Skins/LampochkaSkin.jpg", coinCost: undefined, rebirthCost: 2, name: "💡Lampochka", sound: "Sounds/LampochkaSkin.mp3" },
+    { skin: "Skins/WeddingSkin.jpg", coinCost: undefined, rebirthCost: 3, name: "💒Wedding", sound: "Sounds/WeddingSkin.mp3" },
+    { skin: "Skins/JuriSkin.jpg", coinCost: undefined, rebirthCost: 5, name: "🏈Juri", sound: "Sounds/JuriSkin.mp3" },
+    { skin: "Skins/DuraSkin.jpg", coinCost: undefined, rebirthCost: 10, name: "📑Dura", sound: "Sounds/DuraSkin.mp3" },
+    { skin: "Skins/RentikSkin.jpg", coinCost: 10000000, rebirthCost: 15, name: "🚓Rentik", sound: "Sounds/RentikSkin.mp3" },
 ];
 
 let comboTimeout;
@@ -395,6 +404,8 @@ function handleUpgrade(e) {
 function handleRebirth(e) {
     e.preventDefault();
     if (gameData.count >= gameData.rebirthCost) {
+        const skinsToKeep = [...gameData.skinsBoughtWithRebirths];
+        
         gameData.count = 0;
         gameData.coinsPerClick = 1;
         gameData.upgradeLevel = 0;
@@ -403,7 +414,18 @@ function handleRebirth(e) {
         gameData.rebirths++;
 
         gameData.rebirthCost = Math.floor(1000000 * Math.pow(2, gameData.rebirths));
-
+        
+        gameData.unlockedSkins = [...skinsToKeep];
+        if (!gameData.unlockedSkins.includes(0)) {
+            gameData.unlockedSkins.push(0);
+        }
+        
+        if (!gameData.unlockedSkins.includes(gameData.equippedSkin)) {
+            gameData.equippedSkin = 0;
+        }
+        
+        updateAllButtonImages();
+        updateSound();
         updateUI();
         saveGameData();
 
@@ -568,16 +590,43 @@ function updateSkinsUI() {
     pageSkins.forEach((skin, index) => {
         const skinIndex = startIndex + index;
         const isLocked = !gameData.unlockedSkins.includes(skinIndex);
-        const canAfford = gameData.count >= skin.cost;
+
+        const coinCost = skin.coinCost !== undefined ? skin.coinCost : (skin.cost !== undefined ? skin.cost : 0);
+        const rebirthCost = skin.rebirthCost !== undefined ? skin.rebirthCost : undefined;
+        
+        const canAffordCoins = coinCost === undefined || coinCost === 0 || gameData.count >= coinCost;
+        const canAffordRebirths = rebirthCost === undefined || rebirthCost === 0 || gameData.rebirths >= rebirthCost;
+        const canAfford = canAffordCoins && canAffordRebirths;
         const isPurchasable = isLocked && canAfford;
         
         const skinElement = document.createElement('div');
         skinElement.className = `skin-item ${skinIndex === gameData.equippedSkin ? 'equipped' : ''} ${isLocked ? 'locked' : ''} ${isPurchasable ? 'purchasable' : ''}`;
 
+        let costDisplay = '';
+        const hasCoinCost = coinCost !== undefined && coinCost > 0;
+        const hasRebirthCost = rebirthCost !== undefined && rebirthCost > 0;
+        
+        if (!hasCoinCost && !hasRebirthCost) {
+            costDisplay = '<span class="skin-cost">FREE</span>';
+        } else {
+            const parts = [];
+            if (hasCoinCost) {
+                parts.push(`<span class="skin-cost">${formatNumber(coinCost)}</span>`);
+            }
+            if (hasRebirthCost) {
+                parts.push(`<span class="skin-cost-blue">${formatNumber(rebirthCost)}</span>`);
+            }
+            if (parts.length === 2) {
+                costDisplay = `${parts[0]} / ${parts[1]}`;
+            } else {
+                costDisplay = parts[0];
+            }
+        }
+
         skinElement.innerHTML = `
             <img src="${skin.skin}" alt="${skin.name}" class="skin-image">
             <div class="skin-name">${skin.name}</div>
-            <div class="skin-cost">${skin.cost === 0 ? 'FREE' : formatNumber(skin.cost)}</div>
+            <div class="skin-cost-container">${costDisplay}</div>
         `;
 
         if (gameData.unlockedSkins.includes(skinIndex)) {
@@ -606,9 +655,28 @@ function equipSkin(index) {
 
 function unlockSkin(index) {
     const skin = skins[index];
-    if (gameData.count >= skin.cost) {
-        gameData.count -= skin.cost;
-        gameData.unlockedSkins.push(index);
+    
+    const coinCost = skin.coinCost !== undefined ? skin.coinCost : (skin.cost !== undefined ? skin.cost : 0);
+    const rebirthCost = skin.rebirthCost !== undefined ? skin.rebirthCost : undefined;
+    
+    const canAffordCoins = coinCost === undefined || coinCost === 0 || gameData.count >= coinCost;
+    const canAffordRebirths = rebirthCost === undefined || rebirthCost === 0 || gameData.rebirths >= rebirthCost;
+    
+    if (canAffordCoins && canAffordRebirths) {
+        
+        if (coinCost !== undefined && coinCost > 0) {
+            gameData.count -= coinCost;
+        }
+        if (rebirthCost !== undefined && rebirthCost > 0) {
+            gameData.rebirths -= rebirthCost;
+            if (!gameData.skinsBoughtWithRebirths.includes(index)) {
+                gameData.skinsBoughtWithRebirths.push(index);
+            }
+        }
+        
+        if (!gameData.unlockedSkins.includes(index)) {
+            gameData.unlockedSkins.push(index);
+        }
         equipSkin(index);
         updateUI();
         saveGameData();
@@ -726,6 +794,7 @@ function getInitialGameData() {
         totalCoinsEarned: 0,
         equippedSkin: 0,
         unlockedSkins: [0],
+        skinsBoughtWithRebirths: [],
         tempBoosts: {},
         shopItems: [],
         shopPage: 0,
@@ -755,6 +824,18 @@ function loadGameData() {
             }
             if (loaded.coinsPerSecNonPermanent === undefined) {
                 loaded.coinsPerSecNonPermanent = 0;
+            }
+            
+            if (loaded.skinsBoughtWithRebirths === undefined) {
+                loaded.skinsBoughtWithRebirths = [];
+            }
+            
+            if (!Array.isArray(loaded.unlockedSkins)) {
+                loaded.unlockedSkins = [0];
+            }
+
+            if (!loaded.unlockedSkins.includes(0)) {
+                loaded.unlockedSkins.push(0);
             }
             
             const initialData = getInitialGameData();
