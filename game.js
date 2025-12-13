@@ -22,7 +22,8 @@ const gameData = {
     shopRefreshInterval: 600000,
     theme: 'night',
     hasSeenTutorial: false,
-    musicOnPress: false
+    musicOnPress: false,
+    purchaseMultiplier: '1x'
 };
 
 const MAX_COMBO_CLICKS = 100;
@@ -136,7 +137,8 @@ const elements = {
     skinsPage: document.getElementById('skinsPage'),
     tutorialOverlay: document.getElementById('tutorialOverlay'),
     adminContainer: document.getElementById('adminContainer'),
-    clickSound: document.getElementById('clickSound')
+    clickSound: document.getElementById('clickSound'),
+    multToggle: document.getElementById('multToggle')
 };
 
 function initGame() {
@@ -175,6 +177,19 @@ function setupEventListeners() {
 
     elements.rebirthBtn.addEventListener('click', handleRebirth);
     elements.rebirthBtn.addEventListener('touchstart', handleRebirth, { passive: true });
+
+    if (elements.multToggle) {
+        const sequence = ['1x', '5x', '10x', 'MAX'];
+        const advance = () => {
+            const idx = sequence.indexOf(gameData.purchaseMultiplier);
+            const next = sequence[(idx + 1) % sequence.length];
+            gameData.purchaseMultiplier = next;
+            elements.multToggle.textContent = next;
+            saveGameData();
+        };
+        elements.multToggle.addEventListener('click', advance);
+        elements.multToggle.addEventListener('touchstart', (e) => { e.preventDefault(); advance(); }, { passive: false });
+    }
 
     document.getElementById('shopBtn').addEventListener('click', () => {
         showModal('shopModal');
@@ -435,16 +450,22 @@ function showClickFeedback(amount) {
 
 function handleUpgrade(e) {
     e.preventDefault();
-    if (gameData.count >= gameData.upgradeCost) {
+    let target = gameData.purchaseMultiplier;
+    let buys = 1;
+    if (target === '5x') buys = 5;
+    else if (target === '10x') buys = 10;
+    else if (target === 'MAX') buys = Number.MAX_SAFE_INTEGER;
+    let performed = 0;
+    while (performed < buys && gameData.count >= gameData.upgradeCost) {
         gameData.count -= gameData.upgradeCost;
         gameData.upgradeLevel++;
         gameData.coinsPerClick++;
-
         gameData.upgradeCost = Math.floor(10 * Math.pow(gameData.upgradeLevel, 2)) || 10;
-
+        performed++;
+    }
+    if (performed > 0) {
         updateUI();
         saveGameData();
-
         elements.upgradeBtn.style.transform = 'scale(0.95)';
         setTimeout(() => {
             elements.upgradeBtn.style.transform = 'scale(1)';
@@ -768,6 +789,10 @@ function updateUI() {
     elements.rebirthLevel.textContent = `Rebirths: ${formatNumber(gameData.rebirths)}`;
     elements.rebirthBtn.disabled = gameData.count < gameData.rebirthCost;
 
+    if (elements.multToggle) {
+        elements.multToggle.textContent = gameData.purchaseMultiplier || '1x';
+    }
+
     updateShopTimer();
     updateShopUI();
     
@@ -875,12 +900,13 @@ function getInitialGameData() {
         tempBoosts: {},
         shopItems: [],
         shopPage: 0,
-        skinsPage: 0,
-        lastShopRefresh: Date.now(),
-        shopRefreshInterval: 600000,
-        theme: 'night',
-        hasSeenTutorial: false,
-        musicOnPress: false
+    skinsPage: 0,
+    lastShopRefresh: Date.now(),
+    shopRefreshInterval: 600000,
+    theme: 'night',
+    hasSeenTutorial: false,
+    musicOnPress: false,
+    purchaseMultiplier: '1x'
     };
 }
 
