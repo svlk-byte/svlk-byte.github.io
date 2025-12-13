@@ -238,6 +238,23 @@ function setupEventListeners() {
     document.querySelectorAll('.tutorial-next').forEach(btn => {
         btn.addEventListener('click', nextTutorialStep);
     });
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.key === ' ' || e.code === 'Space') && !isClickInProgress) {
+            const ae = document.activeElement;
+            if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) return;
+            e.preventDefault();
+            handleClickStart(e);
+        }
+    });
+    document.addEventListener('keyup', (e) => {
+        if (e.key === ' ' || e.code === 'Space') {
+            const ae = document.activeElement;
+            if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) return;
+            e.preventDefault();
+            handleClickEnd(e);
+        }
+    });
 }
 
 function handleClickStart(e) {
