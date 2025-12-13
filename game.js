@@ -72,14 +72,15 @@ const shopItemsDB = [
 ];
 
 const skins = [
-    { skin: "Skins/SvetlanaSkin.jpg", cost: 0, name: "🔢Svetlana (Free)", sound: "Sounds/SvetlanaSkin.mp3" },
-    { skin: "Skins/LeshaSkin.jpg", cost: 1, name: "😍Lesha (1)", sound: "Sounds/LeshaSkin.mp3" },
-    { skin: "Skins/RomanSkin.jpg", cost: 10000, name: "👨‍❤️‍👨Roman (10000)", sound: "Sounds/RomanSkin.mp3" },
-    { skin: "Skins/ElenaSkin.jpg", cost: 30000, name: "🦛Elena (30000)", sound: "Sounds/ElenaSkin.mp3" },
-    { skin: "Skins/KirillSkin.jpg", cost: 50000, name: "🪨Kirill (50000)", sound: "Sounds/KirillSkin.mp3" },
-    { skin: "Skins/MatveiSkin.jpg", cost: 75000, name: "🍖Matvei (75000)", sound: "Sounds/MatveiSkin.mp3" },
-    { skin: "Skins/FilipinkoSkin.jpg", cost: 100000, name: "🎨Fillipinko (100000)", sound: "Sounds/FilipinkoSkin.mp3" },
-    { skin: "Skins/DuraSkin.jpg", cost: 200000, name: "📑Dura (200000)", sound: "Sounds/DuraSkin.mp3" },
+    { skin: "Skins/SvetlanaSkin.jpg", cost: 0, name: "🔢Svetlana", sound: "Sounds/SvetlanaSkin.mp3" },
+    { skin: "Skins/LeshaSkin.jpg", cost: 1, name: "😍Lesha", sound: "Sounds/LeshaSkin.mp3" },
+    { skin: "Skins/Lesha2Skin.jpg", cost: 2, name: "👅Lesha2", sound: "Sounds/Lesha2Skin.mp3" },
+    { skin: "Skins/RomanSkin.jpg", cost: 10000, name: "👨‍❤️‍👨Roman", sound: "Sounds/RomanSkin.mp3" },
+    { skin: "Skins/ElenaSkin.jpg", cost: 30000, name: "🦛Elena", sound: "Sounds/ElenaSkin.mp3" },
+    { skin: "Skins/KirillSkin.jpg", cost: 50000, name: "🪨Kirill", sound: "Sounds/KirillSkin.mp3" },
+    { skin: "Skins/MatveiSkin.jpg", cost: 75000, name: "🍖Matvei", sound: "Sounds/MatveiSkin.mp3" },
+    { skin: "Skins/FilipinkoSkin.jpg", cost: 100000, name: "🎨Fillipinko", sound: "Sounds/FilipinkoSkin.mp3" },
+    { skin: "Skins/DuraSkin.jpg", cost: 200000, name: "📑Dura", sound: "Sounds/DuraSkin.mp3" },
 ];
 
 let comboTimeout;
@@ -566,8 +567,12 @@ function updateSkinsUI() {
 
     pageSkins.forEach((skin, index) => {
         const skinIndex = startIndex + index;
+        const isLocked = !gameData.unlockedSkins.includes(skinIndex);
+        const canAfford = gameData.count >= skin.cost;
+        const isPurchasable = isLocked && canAfford;
+        
         const skinElement = document.createElement('div');
-        skinElement.className = `skin-item ${skinIndex === gameData.equippedSkin ? 'equipped' : ''} ${gameData.unlockedSkins.includes(skinIndex) ? '' : 'locked'}`;
+        skinElement.className = `skin-item ${skinIndex === gameData.equippedSkin ? 'equipped' : ''} ${isLocked ? 'locked' : ''} ${isPurchasable ? 'purchasable' : ''}`;
 
         skinElement.innerHTML = `
             <img src="${skin.skin}" alt="${skin.name}" class="skin-image">
@@ -634,6 +639,10 @@ function updateUI() {
 
     updateShopTimer();
     updateShopUI();
+    
+    if (elements.skinsModal.style.display === 'flex') {
+        updateSkinsUI();
+    }
 }
 
 function formatNumber(num, decimals = 2) {
