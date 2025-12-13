@@ -869,16 +869,97 @@ function loadGameData() {
     }
 }
 
+function getTelemetryId() {
+    let telemetryId = localStorage.getItem('svlkTelemetryId');
+    if (!telemetryId) {
+        const fingerprint = [
+            navigator.userAgent,
+            navigator.language,
+            screen.width + 'x' + screen.height,
+            new Date().getTime(),
+            Math.random().toString(36).substring(2, 15)
+        ].join('|');
+        
+        let hash = 0;
+        for (let i = 0; i < fingerprint.length; i++) {
+            const char = fingerprint.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        
+        telemetryId = Math.abs(hash).toString(36) + Date.now().toString(36) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('svlkTelemetryId', telemetryId);
+    }
+    return telemetryId;
+}
+
+function xorEncrypt(data, key) {
+    const dataBytes = new TextEncoder().encode(data);
+    const keyBytes = new TextEncoder().encode(key);
+    const encrypted = new Uint8Array(dataBytes.length);
+    
+    for (let i = 0; i < dataBytes.length; i++) {
+        encrypted[i] = dataBytes[i] ^ keyBytes[i % keyBytes.length];
+    }
+    
+    let binary = '';
+    encrypted.forEach(byte => {
+        binary += String.fromCharCode(byte);
+    });
+    return btoa(binary);
+}
+
+function xorDecrypt(encryptedData, key) {
+    try {
+        const binary = atob(encryptedData);
+        const encrypted = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            encrypted[i] = binary.charCodeAt(i);
+        }
+        
+        const keyBytes = new TextEncoder().encode(key);
+        const decrypted = new Uint8Array(encrypted.length);
+        
+        for (let i = 0; i < encrypted.length; i++) {
+            decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+        }
+        
+        return new TextDecoder().decode(decrypted);
+    } catch (error) {
+        throw new Error('Decryption failed');
+    }
+}
+
 function exportSave() {
+    const telemetryId = getTelemetryId();
     const saveData = JSON.stringify(gameData);
-    elements.exportSaveText.value = btoa(saveData);
+    const encryptedData = xorEncrypt(saveData, telemetryId);
+    
+    const exportString = btoa(telemetryId + ':' + encryptedData);
+    elements.exportSaveText.value = exportString;
 }
 
 function importSave() {
     try {
-        const saveData = atob(elements.importSaveText.value);
-        const loaded = JSON.parse(saveData);
-        Object.assign(gameData, loaded);
+        const exportString = atob(elements.importSaveText.value);
+        const parts = exportString.split(':');
+        
+        if (parts.length === 2) {
+            const importedTelemetryId = parts[0];
+            const encryptedData = parts[1];
+            const currentTelemetryId = getTelemetryId();
+            
+            if (importedTelemetryId !== currentTelemetryId) {
+                alert('This save file belongs to a different device/user and cannot be imported!');
+                return;
+            }
+            
+            const decryptedData = xorDecrypt(encryptedData, currentTelemetryId);
+            const loaded = JSON.parse(decryptedData);
+            Object.assign(gameData, loaded);
+        } else {
+            alert('Invalid save format');
+        }
 
         document.body.className = gameData.theme + '-theme';
         elements.themeSelect.value = gameData.theme;
@@ -891,7 +972,8 @@ function importSave() {
         saveGameData();
         alert('Save imported successfully!');
     } catch (error) {
-        alert('Invalid save data!');
+        console.error('Import error:', error);
+        alert('Invalid save data! This save may be from a different device or corrupted.');
     }
 }
 
