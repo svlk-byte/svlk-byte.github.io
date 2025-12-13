@@ -870,26 +870,50 @@ function loadGameData() {
 }
 
 function getTelemetryId() {
-    let telemetryId = localStorage.getItem('svlkTelemetryId');
-    if (!telemetryId) {
-        const fingerprint = [
-            navigator.userAgent,
-            navigator.language,
-            screen.width + 'x' + screen.height,
-            new Date().getTime(),
-            Math.random().toString(36).substring(2, 15)
-        ].join('|');
-        
+    const fingerprint = [
+        navigator.userAgent || '',
+        navigator.language || '',
+        navigator.hardwareConcurrency || 0,
+        screen.width || 0,
+        screen.height || 0,
+        screen.colorDepth || 0,
+        screen.pixelDepth || 0,
+        navigator.maxTouchPoints || 0,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        navigator.cookieEnabled ? '1' : '0',
+        navigator.doNotTrack || '0',
+        window.devicePixelRatio || 1,
+        navigator.onLine ? '1' : '0',
+        screen.availWidth || 0,
+        screen.availHeight || 0
+    ].join('|');
+    
+    function hashString(str) {
         let hash = 0;
-        for (let i = 0; i < fingerprint.length; i++) {
-            const char = fingerprint.charCodeAt(i);
+        if (str.length === 0) return hash;
+        
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
             hash = ((hash << 5) - hash) + char;
             hash = hash & hash;
         }
         
-        telemetryId = Math.abs(hash).toString(36) + Date.now().toString(36) + Math.random().toString(36).substring(2, 15);
-        localStorage.setItem('svlkTelemetryId', telemetryId);
+        hash = ((hash >>> 16) ^ hash) * 0x45d9f3b;
+        hash = ((hash >>> 16) ^ hash) * 0x45d9f3b;
+        hash = (hash >>> 16) ^ hash;
+        
+        return Math.abs(hash);
     }
+    
+    const hash1 = hashString(fingerprint);
+    const hash2 = hashString(fingerprint.split('').reverse().join(''));
+    const hash3 = hashString(fingerprint.substring(Math.floor(fingerprint.length / 2)) + fingerprint.substring(0, Math.floor(fingerprint.length / 2)));
+    
+    const combinedHash = (hash1.toString(36) + hash2.toString(36) + hash3.toString(36)).replace(/[^a-z0-9]/g, '').substring(0, 32);
+    const telemetryId = combinedHash.padEnd(32, '0').substring(0, 32);
+    
+    localStorage.setItem('svlkTelemetryId', telemetryId);
+    
     return telemetryId;
 }
 
@@ -935,31 +959,22 @@ function exportSave() {
     const saveData = JSON.stringify(gameData);
     const encryptedData = xorEncrypt(saveData, telemetryId);
     
-    const exportString = btoa(telemetryId + ':' + encryptedData);
-    elements.exportSaveText.value = exportString;
+    elements.exportSaveText.value = encryptedData;
 }
 
 function importSave() {
     try {
-        const exportString = atob(elements.importSaveText.value);
-        const parts = exportString.split(':');
+        const encryptedData = elements.importSaveText.value;
+        const currentTelemetryId = getTelemetryId();
+
+        const decryptedData = xorDecrypt(encryptedData, currentTelemetryId);
+        const loaded = JSON.parse(decryptedData);
         
-        if (parts.length === 2) {
-            const importedTelemetryId = parts[0];
-            const encryptedData = parts[1];
-            const currentTelemetryId = getTelemetryId();
-            
-            if (importedTelemetryId !== currentTelemetryId) {
-                alert('This save file belongs to a different device/user and cannot be imported!');
-                return;
-            }
-            
-            const decryptedData = xorDecrypt(encryptedData, currentTelemetryId);
-            const loaded = JSON.parse(decryptedData);
-            Object.assign(gameData, loaded);
-        } else {
-            alert('Invalid save format');
+        if (!loaded || typeof loaded !== 'object') {
+            throw new Error('Invalid save data');
         }
+        
+        Object.assign(gameData, loaded);
 
         document.body.className = gameData.theme + '-theme';
         elements.themeSelect.value = gameData.theme;
@@ -973,7 +988,7 @@ function importSave() {
         alert('Save imported successfully!');
     } catch (error) {
         console.error('Import error:', error);
-        alert('Invalid save data! This save may be from a different device or corrupted.');
+        alert('Invalid save data! This save belongs to a different device and cannot be imported.');
     }
 }
 
