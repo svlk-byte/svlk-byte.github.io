@@ -44,35 +44,181 @@ let adminCodeLocked = false;
 let adminCodeLockUntil = 0;
 
 const shopItemsDB = [
-    { name: "+1 Coin Per Click", effect: (gd) => gd.coinsPerClick++, cost: (gd) => Math.floor(50 * Math.pow(1.15, gd.coinsPerClick)), maxQty: 100 },
-    { name: "+1 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent++, cost: (gd) => Math.floor(75 * Math.pow(1.2, gd.coinsPerSecNonPermanent)), maxQty: 150 },
-    { name: "+5 Coins Per Click", effect: (gd) => gd.coinsPerClick += 5, cost: (gd) => Math.floor(200 * Math.pow(1.25, gd.coinsPerClick / 5)), maxQty: 50 },
-    { name: "+10% Combo Boost", effect: (gd) => gd.comboBoost += 0.1, cost: (gd) => Math.floor(1000 * Math.pow(1.3, gd.comboBoost * 10)), maxQty: 20 },
-    { name: "Half Upgrade Cost", effect: (gd) => gd.upgradeCost = Math.max(10, Math.floor(gd.upgradeCost / 2)), cost: (gd) => gd.upgradeCost * 5, maxQty: 10 },
-    { name: "Instant 10k Coins", effect: (gd) => gd.count += 10000, cost: () => 7500, maxQty: 5 },
-    { name: "Double Coins/sec (5min)", effect: (gd) => activateTempBoost('coinsPerSec', 2, 300), cost: () => 20000, maxQty: 3 },
-    { name: "+5 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent += 5, cost: (gd) => Math.floor(500 * Math.pow(1.25, gd.coinsPerSecNonPermanent / 5)), maxQty: 75 },
-    { name: "Triple Coins Per Click (10min)", effect: (gd) => activateTempBoost('coinsPerClick', 3, 600), cost: () => 50000, maxQty: 2 },
-    { name: "Instant 100k Coins", effect: (gd) => gd.count += 100000, cost: () => 75000, maxQty: 5 },
-    { name: "+20% Rebirth Bonus", effect: (gd) => gd.rebirths += Math.floor(gd.rebirths * 0.2), cost: (gd) => gd.rebirthCost / 3, maxQty: 5 },
-    { name: "Reduce Rebirth Cost by 10%", effect: (gd) => gd.rebirthCost = Math.floor(gd.rebirthCost * 0.9), cost: (gd) => gd.rebirthCost / 2, maxQty: 15 },
-    { name: "+25 Coins Per Click", effect: (gd) => gd.coinsPerClick += 25, cost: (gd) => Math.floor(5000 * Math.pow(1.3, gd.coinsPerClick / 25)), maxQty: 25 },
-    { name: "Permanent +2 Coins/sec", effect: (gd) => gd.coinsPerSecPermanent += 2, cost: (gd) => 10000 * Math.pow(1.2, gd.coinsPerSecPermanent / 2), maxQty: 50 },
-    { name: "Instant 1M Coins", effect: (gd) => gd.count += 1000000, cost: () => 500000, maxQty: 3 },
-    { name: "+50 Coins Per Click", effect: (gd) => gd.coinsPerClick += 50, cost: (gd) => Math.floor(25000 * Math.pow(1.35, gd.coinsPerClick / 50)), maxQty: 15 },
-    { name: "Quad Coins/sec (15min)", effect: (gd) => activateTempBoost('coinsPerSec', 4, 900), cost: () => 1000000, maxQty: 2 },
-    { name: "Reduce Upgrade Cost by 20%", effect: (gd) => gd.upgradeCost = Math.max(10, Math.floor(gd.upgradeCost * 0.8)), cost: (gd) => gd.upgradeCost * 8, maxQty: 5 },
-    { name: "Permanent +1% Click Efficiency", effect: (gd) => gd.coinsPerClick *= 1.01, cost: (gd) => 50000 * Math.pow(1.25, gd.coinsPerClick), maxQty: 25 },
-    { name: "+10 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent += 10, cost: (gd) => Math.floor(10000 * Math.pow(1.3, gd.coinsPerSecNonPermanent / 10)), maxQty: 30 },
-    { name: "Instant 5M Coins", effect: (gd) => gd.count += 5000000, cost: () => 2500000, maxQty: 2 },
-    { name: "Double Coins Per Click (20min)", effect: (gd) => activateTempBoost('coinsPerClick', 2, 1200), cost: () => 1500000, maxQty: 3 },
-    { name: "+100 Coins Per Click", effect: (gd) => gd.coinsPerClick += 100, cost: (gd) => Math.floor(100000 * Math.pow(1.4, gd.coinsPerClick / 100)), maxQty: 10 },
-    { name: "Permanent +5% Combo Boost", effect: (gd) => gd.comboBoost += 0.05, cost: (gd) => 75000 * Math.pow(1.35, gd.comboBoost * 20), maxQty: 15 },
-    { name: "Instant 10M Coins", effect: (gd) => gd.count += 10000000, cost: () => 5000000, maxQty: 2 },
-    { name: "+25 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent += 25, cost: (gd) => Math.floor(50000 * Math.pow(1.35, gd.coinsPerSecNonPermanent / 25)), maxQty: 20 },
-    { name: "Reduce Rebirth Cost by 25%", effect: (gd) => gd.rebirthCost = Math.floor(gd.rebirthCost * 0.75), cost: (gd) => gd.rebirthCost, maxQty: 5 },
-    { name: "Permanent +10 Coins/sec", effect: (gd) => gd.coinsPerSecPermanent += 10, cost: (gd) => 250000 * Math.pow(1.3, gd.coinsPerSecPermanent / 10), maxQty: 15 },
-    { name: "Quintuple Coins/sec (30min)", effect: (gd) => activateTempBoost('coinsPerSec', 5, 1800), cost: () => 10000000, maxQty: 1 },
+    {
+        name: "+1 CPC",
+        effect: gd => gd.coinsPerClick += 1,
+        cost: gd => Math.floor(50 * Math.pow(1.15, gd.upgrades["+1 CPC"].qty)),
+        maxQty: 100
+      },
+      {
+        name: "+5 CPC",
+        effect: gd => gd.coinsPerClick += 5,
+        cost: gd => Math.floor(300 * Math.pow(1.14, gd.upgrades["+5 CPC"].qty)),
+        maxQty: 50
+      },
+      {
+        name: "+25 CPC",
+        effect: gd => gd.coinsPerClick += 25,
+        cost: gd => Math.floor(2500 * Math.pow(1.13, gd.upgrades["+25 CPC"].qty)),
+        maxQty: 25
+      },
+      {
+        name: "+50 CPC",
+        effect: gd => gd.coinsPerClick += 50,
+        cost: gd => Math.floor(8000 * Math.pow(1.12, gd.upgrades["+50 CPC"].qty)),
+        maxQty: 15
+      },
+      {
+        name: "+100 CPC",
+        effect: gd => gd.coinsPerClick += 100,
+        cost: gd => Math.floor(25000 * Math.pow(1.11, gd.upgrades["+100 CPC"].qty)),
+        maxQty: 10
+      },
+      
+      {
+        name: "+1 CPS",
+        effect: gd => gd.coinsPerSecNonPermanent += 1,
+        cost: gd => Math.floor(75 * Math.pow(1.18, gd.upgrades["+1 CPS"].qty)),
+        maxQty: 150
+      },
+      {
+        name: "+5 CPS",
+        effect: gd => gd.coinsPerSecNonPermanent += 5,
+        cost: gd => Math.floor(500 * Math.pow(1.17, gd.upgrades["+5 CPS"].qty)),
+        maxQty: 75
+      },
+      {
+        name: "+10 CPS",
+        effect: gd => gd.coinsPerSecNonPermanent += 10,
+        cost: gd => Math.floor(2000 * Math.pow(1.16, gd.upgrades["+10 CPS"].qty)),
+        maxQty: 30
+      },
+      {
+        name: "+25 CPS",
+        effect: gd => gd.coinsPerSecNonPermanent += 25,
+        cost: gd => Math.floor(8000 * Math.pow(1.15, gd.upgrades["+25 CPS"].qty)),
+        maxQty: 20
+      },
+      
+      {
+        name: "Permanent +2 CPS",
+        effect: gd => gd.coinsPerSecPermanent += 2,
+        cost: gd => Math.floor(10000 * Math.pow(1.22, gd.upgrades["Permanent +2 CPS"].qty)),
+        maxQty: 50
+      },
+      {
+        name: "Permanent +10 CPS",
+        effect: gd => gd.coinsPerSecPermanent += 10,
+        cost: gd => Math.floor(75000 * Math.pow(1.24, gd.upgrades["Permanent +10 CPS"].qty)),
+        maxQty: 15
+      },
+      
+      {
+        name: "+10% Combo Boost",
+        effect: gd => gd.comboBoost += 0.10,
+        cost: gd => Math.floor(1000 * Math.pow(1.3, gd.upgrades["+10% Combo Boost"].qty)),
+        maxQty: 20
+      },
+      {
+        name: "+5% Combo Boost",
+        effect: gd => gd.comboBoost += 0.05,
+        cost: gd => Math.floor(750 * Math.pow(1.28, gd.upgrades["+5% Combo Boost"].qty)),
+        maxQty: 30
+      },
+      
+      {
+        name: "Reduce Upgrade Cost by 10%",
+        effect: gd => gd.upgradeCost = Math.max(10, Math.floor(gd.upgradeCost * 0.9)),
+        cost: gd => Math.floor(5000 * Math.pow(1.35, gd.upgrades["Reduce Upgrade Cost by 10%"].qty)),
+        maxQty: 10
+      },
+      {
+        name: "Reduce Upgrade Cost by 20%",
+        effect: gd => gd.upgradeCost = Math.max(10, Math.floor(gd.upgradeCost * 0.8)),
+        cost: gd => Math.floor(25000 * Math.pow(1.4, gd.upgrades["Reduce Upgrade Cost by 20%"].qty)),
+        maxQty: 5
+      },
+
+      {
+        name: "+20% Rebirth Bonus",
+        effect: gd => gd.rebirthBonus += 0.20,
+        cost: gd => Math.floor(gd.rebirthCost * 0.75),
+        maxQty: 5
+      },
+      {
+        name: "Reduce Rebirth Cost by 10%",
+        effect: gd => gd.rebirthCost = Math.floor(gd.rebirthCost * 0.9),
+        cost: gd => Math.floor(gd.rebirthCost * 0.6),
+        maxQty: 15
+      },
+      {
+        name: "Reduce Rebirth Cost by 25%",
+        effect: gd => gd.rebirthCost = Math.floor(gd.rebirthCost * 0.75),
+        cost: gd => gd.rebirthCost,
+        maxQty: 5
+      },
+
+      {
+        name: "Double CPS (5 min)",
+        effect: gd => activateTempBoost("coinsPerSec", 2, 300),
+        cost: () => 20000,
+        maxQty: 3
+      },
+      {
+        name: "Quad CPS (15 min)",
+        effect: gd => activateTempBoost("coinsPerSec", 4, 900),
+        cost: () => 1000000,
+        maxQty: 2
+      },
+      {
+        name: "Quintuple CPS (30 min)",
+        effect: gd => activateTempBoost("coinsPerSec", 5, 1800),
+        cost: () => 10000000,
+        maxQty: 1
+      },
+      {
+        name: "Triple CPC (10 min)",
+        effect: gd => activateTempBoost("coinsPerClick", 3, 600),
+        cost: () => 50000,
+        maxQty: 2
+      },
+      {
+        name: "Double CPC (20 min)",
+        effect: gd => activateTempBoost("coinsPerClick", 2, 1200),
+        cost: () => 1500000,
+        maxQty: 3
+      },
+    
+      {
+        name: "Instant 10k Coins",
+        effect: gd => gd.count += 10000,
+        cost: () => 7500,
+        maxQty: 5
+      },
+      {
+        name: "Instant 100k Coins",
+        effect: gd => gd.count += 100000,
+        cost: () => 75000,
+        maxQty: 5
+      },
+      {
+        name: "Instant 1M Coins",
+        effect: gd => gd.count += 1000000,
+        cost: () => 500000,
+        maxQty: 3
+      },
+      {
+        name: "Instant 5M Coins",
+        effect: gd => gd.count += 5000000,
+        cost: () => 2500000,
+        maxQty: 2
+      },
+      {
+        name: "Instant 10M Coins",
+        effect: gd => gd.count += 10000000,
+        cost: () => 5000000,
+        maxQty: 2
+      }
 ];
 
 const skins = [
