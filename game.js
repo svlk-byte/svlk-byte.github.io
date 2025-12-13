@@ -614,7 +614,7 @@ function updateSkinsUI() {
                 parts.push(`<span class="skin-cost">${formatNumber(coinCost)}</span>`);
             }
             if (hasRebirthCost) {
-                parts.push(`<span class="skin-cost-blue">${formatNumber(rebirthCost)}</span>`);
+                parts.push(`<span class="skin-cost-blue">${formatNumber(rebirthCost)} rebirths</span>`);
             }
             if (parts.length === 2) {
                 costDisplay = `${parts[0]} / ${parts[1]}`;
