@@ -34,6 +34,7 @@ const SHOP_ITEM_COUNT = 4;
 let clickTimes = [];
 let clicksBlocked = false;
 let blockEndTime = 0;
+let autoclickDetectionDisabled = false;
 
 let adminCodeAttempts = 0;
 const ADMIN_CODE = "AlbertPidor";
@@ -317,6 +318,9 @@ const CONSISTENT_THRESHOLD = 20;
 const INTERVAL_TOLERANCE = 5;
 
 function detectAutoclicker() {
+    if (autoclickDetectionDisabled) {
+        return false;
+    }
     const now = Date.now();
     clickTimes.push(now);
 
@@ -1335,6 +1339,20 @@ function setupAdminPanel() {
 
         elements.adminContainer.appendChild(buttonElement);
     });
+    
+    const autoClickToggle = document.createElement('div');
+    autoClickToggle.className = 'admin-field';
+    autoClickToggle.innerHTML = `<label><input type="checkbox" id="disableAutoClickDetection"> Disable Autoclick Detection</label>`;
+    const disableCheckbox = autoClickToggle.querySelector('#disableAutoClickDetection');
+    disableCheckbox.checked = autoclickDetectionDisabled;
+    disableCheckbox.addEventListener('change', () => {
+        autoclickDetectionDisabled = disableCheckbox.checked;
+        if (autoclickDetectionDisabled) {
+            clicksBlocked = false;
+            clickTimes = [];
+        }
+    });
+    elements.adminContainer.appendChild(autoClickToggle);
 }
 
 function showTutorial() {
