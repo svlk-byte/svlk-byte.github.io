@@ -476,40 +476,129 @@ body {
 
 .settings-container {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .setting-option {
-    margin-bottom: 20px;
+    margin-bottom: 0;
+    padding: 15px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.light-theme .setting-option {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .setting-option label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 0;
     font-weight: 600;
 }
 
-.setting-option select,
+.setting-option select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    color: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23e0e0e0'%3e%3cpath d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+    cursor: pointer;
+}
+
+.light-theme .setting-option select {
+    border-color: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.1);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23333'%3e%3cpath d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3e%3c/svg%3e");
+}
+
 .setting-option textarea {
     width: 100%;
     padding: 10px;
     border-radius: 10px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
     color: inherit;
     font-size: 1rem;
     resize: vertical;
-    min-height: 100px;
-}
-
-.light-theme .setting-option select,
-.light-theme .setting-option textarea {
-    border-color: rgba(0, 0, 0, 0.2);
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.setting-option textarea {
+    min-height: 80px;
     font-family: monospace;
     font-size: 0.9rem;
+}
+
+.light-theme .setting-option textarea {
+    border-color: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.setting-option:nth-child(2) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#musicOnPressToggle {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 50px;
+    height: 28px;
+    background: #555;
+    border-radius: 14px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+}
+
+#musicOnPressToggle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+#musicOnPressToggle:checked {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+#musicOnPressToggle:checked::before {
+    transform: translateX(22px);
+}
+
+.setting-option:nth-child(3) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setting-option:nth-child(3) .action-btn {
+    width: calc(50% - 5px);
+    margin-right: 0;
+    padding: 10px 15px;
+}
+
+.setting-option:last-child {
+    align-items: center;
+    background: none;
+    padding: 0;
 }
 
 .action-btn {
@@ -521,12 +610,6 @@ body {
     cursor: pointer;
     font-weight: 600;
     transition: transform 0.2s;
-    width: calc(50% - 5px);
-    margin-right: 10px;
-}
-
-.action-btn:last-child {
-    margin-right: 0;
 }
 
 .action-btn:hover {

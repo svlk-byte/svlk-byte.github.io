@@ -21,7 +21,8 @@ const gameData = {
     lastShopRefresh: Date.now(),
     shopRefreshInterval: 600000,
     theme: 'night',
-    hasSeenTutorial: false
+    hasSeenTutorial: false,
+    musicOnPress: false
 };
 
 const MAX_COMBO_CLICKS = 100;
@@ -99,6 +100,7 @@ let adminHoldTimeout;
 let isAdminHold = false;
 let isClickInProgress = false;
 let clickStartTime = 0;
+let musicStopTimeout = null;
 
 const elements = {
     coinCounter: document.getElementById('coinCounter'),
@@ -118,6 +120,7 @@ const elements = {
     shopItems: document.getElementById('shopItems'),
     skinsContainer: document.getElementById('skinsContainer'),
     themeSelect: document.getElementById('themeSelect'),
+    musicOnPressToggle: document.getElementById('musicOnPressToggle'),
     exportSaveText: document.getElementById('exportSaveText'),
     importSaveText: document.getElementById('importSaveText'),
     exportSave: document.getElementById('exportSave'),
@@ -145,6 +148,7 @@ function initGame() {
     updateAllButtonImages();
     startCoinsPerSec();
     updateShopTimer();
+    startShopTimerInterval();
     generateShopItems();
     updateUI();
     setupAdminPanel();
@@ -172,12 +176,20 @@ function setupEventListeners() {
     elements.rebirthBtn.addEventListener('click', handleRebirth);
     elements.rebirthBtn.addEventListener('touchstart', handleRebirth, { passive: true });
 
-    document.getElementById('shopBtn').addEventListener('click', () => showModal('shopModal'));
+    document.getElementById('shopBtn').addEventListener('click', () => {
+        showModal('shopModal');
+        updateShopUI();
+        updateShopTimer();
+        startShopTimerInterval();
+    });
     document.getElementById('skinsBtn').addEventListener('click', () => {
         showModal('skinsModal');
         updateSkinsUI();
     });
-    document.getElementById('settingsBtn').addEventListener('click', () => showModal('settingsModal'));
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+        showModal('settingsModal');
+        elements.musicOnPressToggle.checked = gameData.musicOnPress;
+    });
 
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -194,6 +206,7 @@ function setupEventListeners() {
     });
 
     elements.themeSelect.addEventListener('change', handleThemeChange);
+    elements.musicOnPressToggle.addEventListener('change', handleMusicOnPressToggle);
     elements.exportSave.addEventListener('click', exportSave);
     elements.importSave.addEventListener('click', importSave);
     elements.resetGame.addEventListener('click', resetGame);
@@ -218,6 +231,16 @@ function handleClickStart(e) {
         clickStartTime = Date.now();
 
         elements.mainClicker.style.transform = 'scale(0.98)';
+        
+        if (gameData.musicOnPress) {
+            if (musicStopTimeout) {
+                clearTimeout(musicStopTimeout);
+                musicStopTimeout = null;
+            }
+            if (elements.clickSound.paused) {
+                elements.clickSound.play().catch(e => console.log("Audio play failed:", e));
+            }
+        }
     }
 }
 
@@ -236,12 +259,38 @@ function handleClickEnd(e) {
     }
 
     elements.mainClicker.style.transform = 'scale(1)';
+    
+    if (gameData.musicOnPress) {
+        if (musicStopTimeout) {
+            clearTimeout(musicStopTimeout);
+        }
+        musicStopTimeout = setTimeout(() => {
+            if (!isClickInProgress) {
+                elements.clickSound.pause();
+                elements.clickSound.currentTime = 0;
+            }
+            musicStopTimeout = null;
+        }, 500);
+    }
 }
 
 function handleClickCancel() {
     if (isClickInProgress) {
         isClickInProgress = false;
         elements.mainClicker.style.transform = 'scale(1)';
+        
+        if (gameData.musicOnPress) {
+            if (musicStopTimeout) {
+                clearTimeout(musicStopTimeout);
+            }
+            musicStopTimeout = setTimeout(() => {
+                if (!isClickInProgress) {
+                    elements.clickSound.pause();
+                    elements.clickSound.currentTime = 0;
+                }
+                musicStopTimeout = null;
+            }, 500);
+        }
     }
 }
 
@@ -361,10 +410,12 @@ function updateAllButtonImages() {
 }
 
 function playClickSound() {
-    if (elements.clickSound.paused) {
-        elements.clickSound.play().catch(e => console.log("Audio play failed:", e));
-    } else {
-        elements.clickSound.currentTime = 0;
+    if (!gameData.musicOnPress) {
+        if (elements.clickSound.paused) {
+            elements.clickSound.play().catch(e => console.log("Audio play failed:", e));
+        } else {
+            elements.clickSound.currentTime = 0;
+        }
     }
 }
 
@@ -473,17 +524,17 @@ function generateShopItems() {
         gameData.shopItems = [];
         gameData.lastShopRefresh = now;
 
-        const availableItems = [...shopItemsDB];
-        for (let i = 0; i < SHOP_ITEM_COUNT && availableItems.length > 0; i++) {
-            const randomIndex = Math.floor(Math.random() * availableItems.length);
-            const item = availableItems[randomIndex];
+        const availableIndices = Array.from({length: shopItemsDB.length}, (_, i) => i);
+        for (let i = 0; i < SHOP_ITEM_COUNT && availableIndices.length > 0; i++) {
+            const randomIndex = Math.floor(Math.random() * availableIndices.length);
+            const dbIndex = availableIndices[randomIndex];
 
             gameData.shopItems.push({
-                ...item,
+                dbIndex: dbIndex,
                 purchased: 0
             });
 
-            availableItems.splice(randomIndex, 1);
+            availableIndices.splice(randomIndex, 1);
         }
 
         saveGameData();
@@ -499,19 +550,20 @@ function updateShopUI() {
 
     elements.shopItems.innerHTML = '';
 
-    pageItems.forEach((item, index) => {
+    pageItems.forEach((shopItem, index) => {
+        const itemTemplate = shopItemsDB[shopItem.dbIndex];
         const itemElement = document.createElement('div');
         itemElement.className = 'shop-item';
 
-        const actualCost = typeof item.cost === 'function' ? item.cost(gameData) : item.cost;
+        const actualCost = typeof itemTemplate.cost === 'function' ? itemTemplate.cost(gameData) : itemTemplate.cost;
         const canAfford = gameData.count >= actualCost;
-        const canPurchase = item.purchased < item.maxQty;
+        const canPurchase = shopItem.purchased < itemTemplate.maxQty;
 
         itemElement.innerHTML = `
             <div class="shop-item-info">
-                <div class="shop-item-name">${item.name}</div>
+                <div class="shop-item-name">${itemTemplate.name}</div>
                 <div class="shop-item-cost">Cost: ${formatNumber(actualCost)}</div>
-                <div class="shop-item-qty">Purchased: ${item.purchased}/${item.maxQty}</div>
+                <div class="shop-item-qty">Purchased: ${shopItem.purchased}/${itemTemplate.maxQty}</div>
             </div>
             <button class="buy-btn" ${!canAfford || !canPurchase ? 'disabled' : ''}>
                 ${canPurchase ? 'BUY' : 'SOLD OUT'}
@@ -532,13 +584,14 @@ function updateShopUI() {
 }
 
 function buyShopItem(index) {
-    const item = gameData.shopItems[index];
-    const actualCost = typeof item.cost === 'function' ? item.cost(gameData) : item.cost;
+    const shopItem = gameData.shopItems[index];
+    const itemTemplate = shopItemsDB[shopItem.dbIndex];
+    const actualCost = typeof itemTemplate.cost === 'function' ? itemTemplate.cost(gameData) : itemTemplate.cost;
 
-    if (gameData.count >= actualCost && item.purchased < item.maxQty) {
+    if (gameData.count >= actualCost && shopItem.purchased < itemTemplate.maxQty) {
         gameData.count -= actualCost;
-        item.effect(gameData);
-        item.purchased++;
+        itemTemplate.effect(gameData);
+        shopItem.purchased++;
 
         updateUI();
         updateShopUI();
@@ -568,6 +621,16 @@ function updateShopTimer() {
         const seconds = Math.floor((timeUntilRefresh % 60000) / 1000);
         elements.shopTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
+}
+
+function startShopTimerInterval() {
+    if (window.shopTimerInterval) {
+        clearInterval(window.shopTimerInterval);
+    }
+
+    window.shopTimerInterval = setInterval(() => {
+        updateShopTimer();
+    }, 1000);
 }
 
 function changeShopPage(delta) {
@@ -774,6 +837,20 @@ function handleThemeChange() {
     saveGameData();
 }
 
+function handleMusicOnPressToggle() {
+    gameData.musicOnPress = elements.musicOnPressToggle.checked;
+    saveGameData();
+    
+    if (!gameData.musicOnPress) {
+        if (musicStopTimeout) {
+            clearTimeout(musicStopTimeout);
+            musicStopTimeout = null;
+        }
+        elements.clickSound.pause();
+        elements.clickSound.currentTime = 0;
+    }
+}
+
 function saveGameData() {
     localStorage.setItem('svlkClickerSave', JSON.stringify(gameData));
 }
@@ -802,7 +879,8 @@ function getInitialGameData() {
         lastShopRefresh: Date.now(),
         shopRefreshInterval: 600000,
         theme: 'night',
-        hasSeenTutorial: false
+        hasSeenTutorial: false,
+        musicOnPress: false
     };
 }
 
@@ -844,12 +922,32 @@ function loadGameData() {
             });
             Object.assign(gameData, initialData, loaded);
 
+            if (gameData.shopItems && gameData.shopItems.length > 0 && gameData.shopItems[0].name) {
+                const newShopItems = [];
+                for (let oldItem of gameData.shopItems) {
+                    const dbIndex = shopItemsDB.findIndex(db => db.name === oldItem.name);
+                    if (dbIndex !== -1) {
+                        newShopItems.push({ dbIndex, purchased: oldItem.purchased || 0 });
+                    }
+                }
+                gameData.shopItems = newShopItems;
+                if (!newShopItems.length) {
+                    generateShopItems();
+                }
+                saveGameData();
+            }
+
             if (gameData.hasSeenTutorial === undefined) {
                 gameData.hasSeenTutorial = true;
+            }
+            
+            if (gameData.musicOnPress === undefined) {
+                gameData.musicOnPress = false;
             }
 
             document.body.className = gameData.theme + '-theme';
             elements.themeSelect.value = gameData.theme;
+            elements.musicOnPressToggle.checked = gameData.musicOnPress;
 
         } catch (error) {
             console.error("Error loading save data:", error);
