@@ -35,6 +35,7 @@ let blockEndTime = 0;
 let adminCodeAttempts = 0;
 const ADMIN_CODE = "AlbertPidor";
 const MAX_ATTEMPTS = 3;
+const ADMIN_LOCK_DURATION = 24 * 60 * 60 * 1000;
 let adminCodeLocked = false;
 let adminCodeLockUntil = 0;
 
@@ -85,6 +86,7 @@ const skins = [
 
 let comboTimeout;
 let coinsPerSecInterval;
+let autoSaveInterval;
 let adminHoldTimeout;
 let isAdminHold = false;
 let isClickInProgress = false;
@@ -128,6 +130,7 @@ const elements = {
 
 function initGame() {
     loadGameData();
+    loadAdminLockState();
     setupEventListeners();
     setupAdminCodeListeners();
     setupSound();
@@ -700,6 +703,33 @@ function saveGameData() {
     localStorage.setItem('svlkClickerSave', JSON.stringify(gameData));
 }
 
+function getInitialGameData() {
+    return {
+        count: 0,
+        coinsPerClick: 1,
+        coinsPerSecPermanent: 0,
+        coinsPerSecNonPermanent: 0,
+        upgradeLevel: 0,
+        upgradeCost: 10,
+        rebirths: 0,
+        rebirthCost: 1000000,
+        clickCombo: 0,
+        comboBoost: 1,
+        totalClicks: 0,
+        totalCoinsEarned: 0,
+        equippedSkin: 0,
+        unlockedSkins: [0],
+        tempBoosts: {},
+        shopItems: [],
+        shopPage: 0,
+        skinsPage: 0,
+        lastShopRefresh: Date.now(),
+        shopRefreshInterval: 600000,
+        theme: 'night',
+        hasSeenTutorial: false
+    };
+}
+
 function loadGameData() {
     const saved = localStorage.getItem('svlkClickerSave');
     if (saved) {
@@ -720,7 +750,11 @@ function loadGameData() {
                 loaded.coinsPerSecNonPermanent = 0;
             }
             
-            Object.assign(gameData, loaded);
+            const initialData = getInitialGameData();
+            Object.keys(gameData).forEach(key => {
+                delete gameData[key];
+            });
+            Object.assign(gameData, initialData, loaded);
 
             if (gameData.hasSeenTutorial === undefined) {
                 gameData.hasSeenTutorial = true;
@@ -731,7 +765,19 @@ function loadGameData() {
 
         } catch (error) {
             console.error("Error loading save data:", error);
+
+            const initialData = getInitialGameData();
+            Object.keys(gameData).forEach(key => {
+                delete gameData[key];
+            });
+            Object.assign(gameData, initialData);
         }
+    } else {
+        const initialData = getInitialGameData();
+        Object.keys(gameData).forEach(key => {
+            delete gameData[key];
+        });
+        Object.assign(gameData, initialData);
     }
 }
 
@@ -763,8 +809,52 @@ function importSave() {
 
 function resetGame() {
     if (confirm('Are you sure you want to reset the game? All progress will be lost!')) {
+        if (autoSaveInterval) {
+            clearInterval(autoSaveInterval);
+        }
+        
+        const initialData = getInitialGameData();
+        Object.keys(gameData).forEach(key => {
+            delete gameData[key];
+        });
+        Object.assign(gameData, initialData);
+        
         localStorage.removeItem('svlkClickerSave');
-        location.reload();
+        
+        saveGameData();
+        
+        setTimeout(() => {
+            location.reload();
+        }, 50);
+    }
+}
+
+function saveAdminLockState() {
+    const lockState = {
+        locked: adminCodeLocked,
+        lockUntil: adminCodeLockUntil
+    };
+    localStorage.setItem('svlkAdminLock', JSON.stringify(lockState));
+}
+
+function loadAdminLockState() {
+    const saved = localStorage.getItem('svlkAdminLock');
+    if (saved) {
+        try {
+            const lockState = JSON.parse(saved);
+            const now = Date.now();
+            
+            if (lockState.lockUntil && now < lockState.lockUntil) {
+                adminCodeLocked = lockState.locked;
+                adminCodeLockUntil = lockState.lockUntil;
+            } else {
+                adminCodeLocked = false;
+                adminCodeLockUntil = 0;
+                saveAdminLockState();
+            }
+        } catch (error) {
+            console.error("Error loading admin lock state:", error);
+        }
     }
 }
 
@@ -789,6 +879,8 @@ function setupAdminCodeListeners() {
 }
 
 function startAdminCodeHold() {
+    loadAdminLockState();
+    
     adminHoldTimeout = setTimeout(() => {
         if (!adminCodeLocked || Date.now() > adminCodeLockUntil) {
             showAdminCodeModal();
@@ -801,9 +893,14 @@ function cancelAdminCodeHold() {
 }
 
 function showAdminCodeModal() {
+    loadAdminLockState();
+    
     if (adminCodeLocked && Date.now() < adminCodeLockUntil) {
         const remainingTime = Math.ceil((adminCodeLockUntil - Date.now()) / 1000);
-        alert(`Admin access locked. Try again in ${remainingTime} seconds.`);
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        const seconds = remainingTime % 60;
+        alert(`Admin access locked. Try again in ${hours}h ${minutes}m ${seconds}s.`);
         return;
     }
 
@@ -817,15 +914,22 @@ function submitAdminCode() {
     const errorElement = document.getElementById('codeError');
     const enteredCode = codeInput.value;
 
+    loadAdminLockState();
+
     if (adminCodeLocked && Date.now() < adminCodeLockUntil) {
         const remainingTime = Math.ceil((adminCodeLockUntil - Date.now()) / 1000);
-        errorElement.textContent = `Locked. Try again in ${remainingTime} seconds.`;
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        const seconds = remainingTime % 60;
+        errorElement.textContent = `Locked. Try again in ${hours}h ${minutes}m ${seconds}s.`;
         return;
     }
 
     if (enteredCode === ADMIN_CODE) {
         adminCodeAttempts = 0;
         adminCodeLocked = false;
+        adminCodeLockUntil = 0;
+        saveAdminLockState();
         document.getElementById('adminCodeModal').style.display = 'none';
         resetCodeInput();
         showModal('adminModal');
@@ -843,16 +947,11 @@ function submitAdminCode() {
 
         if (adminCodeAttempts >= MAX_ATTEMPTS) {
             adminCodeLocked = true;
-            adminCodeLockUntil = Date.now() + 30000;
-            errorElement.textContent = `Too many attempts! Locked for 30 seconds.`;
+            adminCodeLockUntil = Date.now() + ADMIN_LOCK_DURATION;
+            saveAdminLockState();
+            const hours = Math.floor(ADMIN_LOCK_DURATION / (1000 * 60 * 60));
+            errorElement.textContent = `Too many attempts! Locked for ${hours} hours.`;
             codeInput.disabled = true;
-
-            setTimeout(() => {
-                adminCodeLocked = false;
-                adminCodeAttempts = 0;
-                codeInput.disabled = false;
-                errorElement.textContent = 'Lock expired. Try again.';
-            }, 30000);
         }
     }
 }
@@ -963,4 +1062,4 @@ function nextTutorialStep() {
 
 document.addEventListener('DOMContentLoaded', initGame);
 
-setInterval(saveGameData, 30000);
+autoSaveInterval = setInterval(saveGameData, 30000);
