@@ -397,8 +397,7 @@ function handleRebirth(e) {
         gameData.coinsPerClick = 1;
         gameData.upgradeLevel = 0;
         gameData.upgradeCost = 10;
-        gameData.coinsPerSecNonPermanent = 0; // Reset non-permanent CPS on rebirth
-        // coinsPerSecPermanent is NOT reset - it persists through rebirths
+        gameData.coinsPerSecNonPermanent = 0;
         gameData.rebirths++;
 
         gameData.rebirthCost = Math.floor(1000000 * Math.pow(2, gameData.rebirths));
@@ -625,11 +624,11 @@ function updateUI() {
     elements.comboCounter.textContent = `Combo: ${gameData.clickCombo}x${getComboMultiplier().toFixed(1)}`;
 
     elements.upgradeCost.textContent = `Cost: ${formatNumber(gameData.upgradeCost)}`;
-    elements.upgradeLevel.textContent = `Level: ${gameData.upgradeLevel}`;
+    elements.upgradeLevel.textContent = `Level: ${formatNumber(gameData.upgradeLevel)}`;
     elements.upgradeBtn.disabled = gameData.count < gameData.upgradeCost;
 
     elements.rebirthCost.textContent = `Cost: ${formatNumber(gameData.rebirthCost)}`;
-    elements.rebirthLevel.textContent = `Rebirths: ${gameData.rebirths}`;
+    elements.rebirthLevel.textContent = `Rebirths: ${formatNumber(gameData.rebirths)}`;
     elements.rebirthBtn.disabled = gameData.count < gameData.rebirthCost;
 
     updateShopTimer();
@@ -661,7 +660,6 @@ function startCoinsPerSec() {
     if (coinsPerSecInterval) clearInterval(coinsPerSecInterval);
 
     coinsPerSecInterval = setInterval(() => {
-        // Combine permanent and non-permanent CPS
         const totalCPS = gameData.coinsPerSecPermanent + gameData.coinsPerSecNonPermanent;
         
         if (totalCPS > 0) {
@@ -707,17 +705,14 @@ function loadGameData() {
     if (saved) {
         try {
             const loaded = JSON.parse(saved);
-            
-            // Migrate old saves: if coinsPerSec exists but new fields don't, convert it
+
             if (loaded.coinsPerSec !== undefined && loaded.coinsPerSecPermanent === undefined) {
-                // Convert existing coinsPerSec to non-permanent (since it was reset on rebirth before)
                 loaded.coinsPerSecNonPermanent = loaded.coinsPerSec || 0;
                 loaded.coinsPerSecPermanent = 0;
-                // Remove old field to avoid confusion
+
                 delete loaded.coinsPerSec;
             }
             
-            // Ensure new fields exist even if migration didn't happen
             if (loaded.coinsPerSecPermanent === undefined) {
                 loaded.coinsPerSecPermanent = 0;
             }
