@@ -178,6 +178,10 @@ let musicStopTimeout = null;
 const elements = {
     coinCounter: document.getElementById('coinCounter'),
     comboCounter: document.getElementById('comboCounter'),
+    cpcText: document.getElementById('cpcText'),
+    cpsText: document.getElementById('cpsText'),
+    boostsText: document.getElementById('boostsText'),
+    boostsPill: document.getElementById('boostsPill'),
     mainClicker: document.getElementById('mainClicker'),
     upgradeBtn: document.getElementById('upgradeBtn'),
     upgradeCost: document.getElementById('upgradeCost'),
@@ -225,6 +229,7 @@ function initGame() {
     startShopTimerInterval();
     generateShopItems();
     updateUI();
+    startTopBarInterval();
     setupAdminPanel();
 
     if (!gameData.hasSeenTutorial) {
@@ -876,6 +881,7 @@ function changeSkinsPage(delta) {
 function updateUI() {
     elements.coinCounter.textContent = formatNumber(gameData.count);
     elements.comboCounter.textContent = `Combo: ${gameData.clickCombo}x${getComboMultiplier().toFixed(1)}`;
+    updateTopBarStats();
 
     elements.upgradeCost.textContent = `Cost: ${formatNumber(gameData.upgradeCost)}`;
     elements.upgradeLevel.textContent = `Level: ${formatNumber(gameData.upgradeLevel)}`;
@@ -895,6 +901,60 @@ function updateUI() {
     if (elements.skinsModal.style.display === 'flex') {
         updateSkinsUI();
     }
+}
+
+function getEffectiveCPC() {
+    let val = gameData.coinsPerClick;
+    const rebirthMultiplier = Math.pow(1.12, gameData.rebirths);
+    val *= rebirthMultiplier;
+    val *= getComboMultiplier();
+    if (gameData.tempBoosts.coinsPerClick) {
+        val *= gameData.tempBoosts.coinsPerClick.multiplier;
+    }
+    return Math.floor(val);
+}
+
+function formatTimeRemaining(ms) {
+    if (ms <= 0) return '0:00';
+    const totalSeconds = Math.ceil(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function updateTopBarStats() {
+    if (elements.cpcText) {
+        elements.cpcText.textContent = `CPC: ${formatNumber(getEffectiveCPC())}`;
+    }
+    if (elements.cpsText) {
+        elements.cpsText.textContent = `CPS: P ${formatNumber(gameData.coinsPerSecPermanent)}, NP ${formatNumber(gameData.coinsPerSecNonPermanent)}`;
+    }
+    if (elements.boostsText) {
+        const parts = [];
+        const now = Date.now();
+        const cpcBoost = gameData.tempBoosts.coinsPerClick;
+        const cpsBoost = gameData.tempBoosts.coinsPerSec;
+        if (cpcBoost) {
+            parts.push(`CPC x${cpcBoost.multiplier} (${formatTimeRemaining(cpcBoost.endTime - now)})`);
+        }
+        if (cpsBoost) {
+            parts.push(`CPS x${cpsBoost.multiplier} (${formatTimeRemaining(cpsBoost.endTime - now)})`);
+        }
+        const hasBoosts = parts.length > 0;
+        elements.boostsText.textContent = hasBoosts ? `Boosts: ${parts.join(' | ')}` : '';
+        if (elements.boostsPill) {
+            elements.boostsPill.style.display = hasBoosts ? '' : 'none';
+        }
+    }
+}
+
+function startTopBarInterval() {
+    if (window.topBarInterval) {
+        clearInterval(window.topBarInterval);
+    }
+    window.topBarInterval = setInterval(() => {
+        updateTopBarStats();
+    }, 1000);
 }
 
 function formatNumber(num, decimals = 2) {

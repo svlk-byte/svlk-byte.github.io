@@ -35,7 +35,7 @@ body {
 .top-bar {
     display: flex;
     justify-content: space-between;
-    padding: 15px 20px;
+    padding: 6px 12px;
     position: fixed;
     top: 0;
     left: 0;
@@ -47,20 +47,67 @@ body {
 
 .top-left {
     display: flex;
-    gap: 15px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.top-left-row {
+    display: flex;
+    gap: 10px;
 }
 
 .top-right {
     text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.top-right-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    justify-content: flex-end;
+}
+
+.hud-stats {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.light-theme .stat-pill {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+.stat-pill i {
+    color: #ffd700;
 }
 
 .menu-btn {
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
     color: inherit;
     cursor: pointer;
     transition: all 0.2s;
@@ -76,15 +123,15 @@ body {
 }
 
 .counter {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: bold;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     color: #ffd700;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 .combo-counter {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #ff6b6b;
     font-weight: 600;
 }
@@ -883,6 +930,10 @@ body {
         height: 100vh;
     }
 
+    .hud-stats {
+        gap: 6px;
+    }
+
     .upgrade-btn {
         width: 100px;
         height: 100px;
@@ -893,17 +944,22 @@ body {
     }
 
     .counter {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     .combo-counter {
         font-size: 1rem;
     }
 
+    .stat-pill {
+        font-size: 0.8rem;
+        padding: 4px 7px;
+    }
+
     .menu-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1.3rem;
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
     }
 
     .skins-container {
@@ -911,12 +967,12 @@ body {
     }
 
     .top-bar {
-        padding: 10px 15px;
+        padding: 6px 10px;
     }
+}
 
-    .bottom-bar {
-        padding: 15px;
-    }
+.bottom-bar {
+    padding: 15px;
 }
 
 @media (max-width: 480px) {
@@ -948,6 +1004,10 @@ body {
     .upgrade-info {
         font-size: 0.9rem;
         padding: 6px 10px;
+    }
+
+    .stat-pill {
+        font-size: 0.85rem;
     }
 }
 
