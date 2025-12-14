@@ -473,7 +473,7 @@ function handleActualClick() {
     const comboMultiplier = getComboMultiplier();
     coinsEarned *= comboMultiplier;
 
-    if (gameData.tempBoosts.coinsPerClick) {
+    if (gameData.tempBoosts.coinsPerClick && gameData.tempBoosts.coinsPerClick.endTime > Date.now()) {
         coinsEarned *= gameData.tempBoosts.coinsPerClick.multiplier;
     }
 
@@ -908,7 +908,7 @@ function getEffectiveCPC() {
     const rebirthMultiplier = Math.pow(1.12, gameData.rebirths);
     val *= rebirthMultiplier;
     val *= getComboMultiplier();
-    if (gameData.tempBoosts.coinsPerClick) {
+    if (gameData.tempBoosts.coinsPerClick && gameData.tempBoosts.coinsPerClick.endTime > Date.now()) {
         val *= gameData.tempBoosts.coinsPerClick.multiplier;
     }
     return Math.floor(val);
@@ -922,7 +922,24 @@ function formatTimeRemaining(ms) {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
+function pruneExpiredBoosts() {
+    const now = Date.now();
+    let changed = false;
+    if (gameData.tempBoosts.coinsPerClick && gameData.tempBoosts.coinsPerClick.endTime <= now) {
+        delete gameData.tempBoosts.coinsPerClick;
+        changed = true;
+    }
+    if (gameData.tempBoosts.coinsPerSec && gameData.tempBoosts.coinsPerSec.endTime <= now) {
+        delete gameData.tempBoosts.coinsPerSec;
+        changed = true;
+    }
+    if (changed) {
+        saveGameData();
+    }
+}
+
 function updateTopBarStats() {
+    pruneExpiredBoosts();
     if (elements.cpcText) {
         elements.cpcText.textContent = `CPC: ${formatNumber(getEffectiveCPC())}`;
     }
@@ -934,10 +951,10 @@ function updateTopBarStats() {
         const now = Date.now();
         const cpcBoost = gameData.tempBoosts.coinsPerClick;
         const cpsBoost = gameData.tempBoosts.coinsPerSec;
-        if (cpcBoost) {
+        if (cpcBoost && cpcBoost.endTime > now) {
             parts.push(`CPC x${cpcBoost.multiplier} (${formatTimeRemaining(cpcBoost.endTime - now)})`);
         }
-        if (cpsBoost) {
+        if (cpsBoost && cpsBoost.endTime > now) {
             parts.push(`CPS x${cpsBoost.multiplier} (${formatTimeRemaining(cpsBoost.endTime - now)})`);
         }
         const hasBoosts = parts.length > 0;
@@ -960,7 +977,7 @@ function startTopBarInterval() {
 function formatNumber(num, decimals = 2) {
     if (num === null || num === undefined || !isFinite(num)) return '0';
     if (num < 1000) return Math.floor(num).toString();
-
+ 
     const suffixes = [
         '', 'K', 'M', 'B', 'T',
         'Qa', 'Qi', 'Sx', 'Sp', 'Oc',
@@ -991,7 +1008,7 @@ function startCoinsPerSec() {
 ;
             coinsEarned *= rebirthMultiplier;
 
-            if (gameData.tempBoosts.coinsPerSec) {
+            if (gameData.tempBoosts.coinsPerSec && gameData.tempBoosts.coinsPerSec.endTime > Date.now()) {
                 coinsEarned *= gameData.tempBoosts.coinsPerSec.multiplier;
             }
 
@@ -1148,6 +1165,7 @@ function loadGameData() {
         });
         Object.assign(gameData, initialData);
     }
+    pruneExpiredBoosts();
 }
 
 function getTelemetryId() {
