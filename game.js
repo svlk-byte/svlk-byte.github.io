@@ -44,58 +44,127 @@ let adminCodeLocked = false;
 let adminCodeLockUntil = 0;
 
 const shopItemsDB = [
-    { name: "+1 Coin Per Click", effect: (gd) => gd.coinsPerClick++, cost: (gd) => Math.floor(50 * Math.pow(1.15, gd.coinsPerClick)), maxQty: 100 },
-    { name: "+1 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent++, cost: (gd) => Math.floor(75 * Math.pow(1.2, gd.coinsPerSecNonPermanent)), maxQty: 150 },
-    { name: "+5 Coins Per Click", effect: (gd) => gd.coinsPerClick += 5, cost: (gd) => Math.floor(200 * Math.pow(1.25, gd.coinsPerClick / 5)), maxQty: 50 },
-    { name: "+10% Combo Boost", effect: (gd) => gd.comboBoost += 0.1, cost: (gd) => Math.floor(1000 * Math.pow(1.3, gd.comboBoost * 10)), maxQty: 20 },
-    { name: "Half Upgrade Cost", effect: (gd) => gd.upgradeCost = Math.max(10, Math.floor(gd.upgradeCost / 2)), cost: (gd) => gd.upgradeCost * 5, maxQty: 10 },
-    { name: "Instant 10k Coins", effect: (gd) => gd.count += 10000, cost: () => 7500, maxQty: 5 },
-    { name: "Double Coins/sec (5min)", effect: (gd) => activateTempBoost('coinsPerSec', 2, 300), cost: () => 20000, maxQty: 3 },
-    { name: "+5 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent += 5, cost: (gd) => Math.floor(500 * Math.pow(1.25, gd.coinsPerSecNonPermanent / 5)), maxQty: 75 },
-    { name: "Triple Coins Per Click (10min)", effect: (gd) => activateTempBoost('coinsPerClick', 3, 600), cost: () => 50000, maxQty: 2 },
-    { name: "Instant 100k Coins", effect: (gd) => gd.count += 100000, cost: () => 75000, maxQty: 5 },
-    { name: "+20% Rebirth Bonus", effect: (gd) => gd.rebirths += Math.floor(gd.rebirths * 0.2), cost: (gd) => gd.rebirthCost / 3, maxQty: 5 },
-    { name: "Reduce Rebirth Cost by 10%", effect: (gd) => gd.rebirthCost = Math.floor(gd.rebirthCost * 0.9), cost: (gd) => gd.rebirthCost / 2, maxQty: 15 },
-    { name: "+25 Coins Per Click", effect: (gd) => gd.coinsPerClick += 25, cost: (gd) => Math.floor(5000 * Math.pow(1.3, gd.coinsPerClick / 25)), maxQty: 25 },
-    { name: "Permanent +2 Coins/sec", effect: (gd) => gd.coinsPerSecPermanent += 2, cost: (gd) => 10000 * Math.pow(1.2, gd.coinsPerSecPermanent / 2), maxQty: 50 },
-    { name: "Instant 1M Coins", effect: (gd) => gd.count += 1000000, cost: () => 500000, maxQty: 3 },
-    { name: "+50 Coins Per Click", effect: (gd) => gd.coinsPerClick += 50, cost: (gd) => Math.floor(25000 * Math.pow(1.35, gd.coinsPerClick / 50)), maxQty: 15 },
-    { name: "Quad Coins/sec (15min)", effect: (gd) => activateTempBoost('coinsPerSec', 4, 900), cost: () => 1000000, maxQty: 2 },
-    { name: "Reduce Upgrade Cost by 20%", effect: (gd) => gd.upgradeCost = Math.max(10, Math.floor(gd.upgradeCost * 0.8)), cost: (gd) => gd.upgradeCost * 8, maxQty: 5 },
-    { name: "+1% Click Efficiency", effect: (gd) => gd.coinsPerClick *= 1.01, cost: (gd) => 50000 * Math.pow(1.25, gd.coinsPerClick), maxQty: 25 },
-    { name: "+10 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent += 10, cost: (gd) => Math.floor(10000 * Math.pow(1.3, gd.coinsPerSecNonPermanent / 10)), maxQty: 30 },
-    { name: "Instant 5M Coins", effect: (gd) => gd.count += 5000000, cost: () => 2500000, maxQty: 2 },
-    { name: "Double Coins Per Click (20min)", effect: (gd) => activateTempBoost('coinsPerClick', 2, 1200), cost: () => 1500000, maxQty: 3 },
-    { name: "+100 Coins Per Click", effect: (gd) => gd.coinsPerClick += 100, cost: (gd) => Math.floor(100000 * Math.pow(1.4, gd.coinsPerClick / 100)), maxQty: 10 },
-    { name: "Permanent +5% Combo Boost", effect: (gd) => gd.comboBoost += 0.05, cost: (gd) => 75000 * Math.pow(1.35, gd.comboBoost * 20), maxQty: 15 },
-    { name: "Instant 10M Coins", effect: (gd) => gd.count += 10000000, cost: () => 5000000, maxQty: 2 },
-    { name: "+25 Coin/sec", effect: (gd) => gd.coinsPerSecNonPermanent += 25, cost: (gd) => Math.floor(50000 * Math.pow(1.35, gd.coinsPerSecNonPermanent / 25)), maxQty: 20 },
-    { name: "Reduce Rebirth Cost by 25%", effect: (gd) => gd.rebirthCost = Math.floor(gd.rebirthCost * 0.75), cost: (gd) => gd.rebirthCost, maxQty: 5 },
-    { name: "Permanent +10 Coins/sec", effect: (gd) => gd.coinsPerSecPermanent += 10, cost: (gd) => 250000 * Math.pow(1.3, gd.coinsPerSecPermanent / 10), maxQty: 15 },
-    { name: "Quintuple Coins/sec (30min)", effect: (gd) => activateTempBoost('coinsPerSec', 5, 1800), cost: () => 10000000, maxQty: 1 },
+    {
+        name: "+1 Coin Per Click",
+        effect: (gd) => gd.coinsPerClick += 1,
+        cost: (_, p) => Math.floor(50 * Math.pow(1.25, p)),
+        maxQty: 50
+    },
+    {
+        name: "+5 Coins Per Click",
+        effect: (gd) => gd.coinsPerClick += 5,
+        cost: (_, p) => Math.floor(250 * Math.pow(1.3, p)),
+        maxQty: 30
+    },
+    {
+        name: "+25 Coins Per Click",
+        effect: (gd) => gd.coinsPerClick += 25,
+        cost: (_, p) => Math.floor(2000 * Math.pow(1.35, p)),
+        maxQty: 20
+    },
+    {
+        name: "+1 Coin/sec",
+        effect: (gd) => gd.coinsPerSecNonPermanent += 1,
+        cost: (_, p) => Math.floor(100 * Math.pow(1.25, p)),
+        maxQty: 40
+    },
+    {
+        name: "+5 Coins/sec",
+        effect: (gd) => gd.coinsPerSecNonPermanent += 5,
+        cost: (_, p) => Math.floor(600 * Math.pow(1.3, p)),
+        maxQty: 30
+    },
+    {
+        name: "+10 Coins/sec",
+        effect: (gd) => gd.coinsPerSecNonPermanent += 10,
+        cost: (_, p) => Math.floor(3000 * Math.pow(1.35, p)),
+        maxQty: 20
+    },
+    {
+        name: "Permanent +2 Coins/sec",
+        effect: (gd) => gd.coinsPerSecPermanent += 2,
+        cost: (_, p) => Math.floor(5000 * Math.pow(1.4, p)),
+        maxQty: 15
+    },
+    {
+        name: "+10% Combo Boost",
+        effect: (gd) => gd.comboBoost += 0.1,
+        cost: (_, p) => Math.floor(2500 * Math.pow(1.35, p)),
+        maxQty: 10
+    },
+    {
+        name: "Double Coins/sec (5 min)",
+        effect: () => activateTempBoost('coinsPerSec', 2, 300),
+        cost: (_, p) => Math.floor(5000 * Math.pow(1.4, p)),
+        maxQty: 3
+    },
+    {
+        name: "Triple Coins Per Click (5 min)",
+        effect: () => activateTempBoost('coinsPerClick', 3, 300),
+        cost: (_, p) => Math.floor(7500 * Math.pow(1.4, p)),
+        maxQty: 3
+    },
+    {
+        name: "Instant Coins",
+        effect: (gd) => {
+            gd.count += Math.floor(5000 * Math.pow(1.3, gd.rebirths));
+        },
+        cost: (_, p) => Math.floor(2000 * Math.pow(1.3, p)),
+        maxQty: 10
+    },
+    {
+        name: "Reduce Rebirth Cost -10%",
+        effect: (gd) => {
+            gd.rebirthCost = Math.floor(gd.rebirthCost * 0.9);
+        },
+        cost: (_, p) => Math.floor(10_000 * Math.pow(1.5, p)),
+        maxQty: 5
+    }
 ];
 
+// const skins = [
+//     { skin: "Skins/SvetlanaSkin.jpg", coinCost: 0, rebirthCost: undefined, name: "🔢Svetlana", sound: "Sounds/SvetlanaSkin.mp3" },
+//     { skin: "Skins/LeshaSkin.jpg", coinCost: 1, rebirthCost: undefined, name: "😍Lesha", sound: "Sounds/LeshaSkin.mp3" },
+//     { skin: "Skins/Lesha2Skin.jpg", coinCost: 2, rebirthCost: undefined, name: "👅Lesha2", sound: "Sounds/Lesha2Skin.mp3" },
+//     { skin: "Skins/SensovaSkin.jpg", coinCost: 100, rebirthCost: undefined, name: "🐦Sensova", sound: "Sounds/SensovaSkin.mp3" },
+//     { skin: "Skins/Svetlana2Skin.jpg", coinCost: 1000, rebirthCost: undefined, name: "🐐Svetlana Baran", sound: "Sounds/Svetlana2Skin.mp3" },
+//     //{ skin: "Skins/Svetlana2Skin.jpg", coinCost: 1000, rebirthCost: undefined, name: "🍔5 Tonn Svetlana", sound: "Sounds/Svetlana2Skin.mp3" },
+//     { skin: "Skins/RomanSkin.jpg", coinCost: 10000, rebirthCost: undefined, name: "👨‍❤️‍👨Roman", sound: "Sounds/RomanSkin.mp3" },
+//     { skin: "Skins/ElenaSkin.jpg", coinCost: 30000, rebirthCost: undefined, name: "🦛Elena", sound: "Sounds/ElenaSkin.mp3" },
+//     { skin: "Skins/KirillSkin.jpg", coinCost: 50000, rebirthCost: undefined, name: "🪨Kirill", sound: "Sounds/KirillSkin.mp3" },
+//     { skin: "Skins/MatveiSkin.jpg", coinCost: 100000, rebirthCost: undefined, name: "🍖Matvei", sound: "Sounds/MatveiSkin.mp3" },
+//     { skin: "Skins/FilipinkoSkin.jpg", coinCost: 200000, rebirthCost: undefined, name: "🎨Fillipinko", sound: "Sounds/FilipinkoSkin.mp3" },
+//     { skin: "Skins/SofiaSkin.jpg", coinCost: 350000, rebirthCost: undefined, name: "👑Sofia", sound: "Sounds/SofiaSkin.mp3" },
+//     { skin: "Skins/BioSkin.jpg", coinCost: 500000, rebirthCost: undefined, name: "🥑BioAvocado", sound: "Sounds/BioSkin.mp3" },
+//     { skin: "Skins/VinogradikSkin.jpg", coinCost: undefined, rebirthCost: 1, name: "🍇Vinogradik", sound: "Sounds/VinogradikSkin.mp3" },
+//     { skin: "Skins/LampochkaSkin.jpg", coinCost: undefined, rebirthCost: 2, name: "💡Lampochka", sound: "Sounds/LampochkaSkin.mp3" },
+//     { skin: "Skins/WeddingSkin.jpg", coinCost: undefined, rebirthCost: 3, name: "💒Wedding", sound: "Sounds/WeddingSkin.mp3" },
+//     { skin: "Skins/JuriSkin.jpg", coinCost: undefined, rebirthCost: 5, name: "🏈Juri", sound: "Sounds/JuriSkin.mp3" },
+//     { skin: "Skins/DuraSkin.jpg", coinCost: undefined, rebirthCost: 10, name: "📑Dura", sound: "Sounds/DuraSkin.mp3" },
+//     { skin: "Skins/RentikSkin.jpg", coinCost: 10000000, rebirthCost: 15, name: "🚓Rentik", sound: "Sounds/RentikSkin.mp3" },
+// ];
 const skins = [
-    { skin: "Skins/SvetlanaSkin.jpg", coinCost: 0, rebirthCost: undefined, name: "🔢Svetlana", sound: "Sounds/SvetlanaSkin.mp3" },
-    { skin: "Skins/LeshaSkin.jpg", coinCost: 1, rebirthCost: undefined, name: "😍Lesha", sound: "Sounds/LeshaSkin.mp3" },
-    { skin: "Skins/Lesha2Skin.jpg", coinCost: 2, rebirthCost: undefined, name: "👅Lesha2", sound: "Sounds/Lesha2Skin.mp3" },
-    { skin: "Skins/SensovaSkin.jpg", coinCost: 100, rebirthCost: undefined, name: "🐦Sensova", sound: "Sounds/SensovaSkin.mp3" },
-    { skin: "Skins/Svetlana2Skin.jpg", coinCost: 1000, rebirthCost: undefined, name: "🐐Svetlana Baran", sound: "Sounds/Svetlana2Skin.mp3" },
-    //{ skin: "Skins/Svetlana2Skin.jpg", coinCost: 1000, rebirthCost: undefined, name: "🍔5 Tonn Svetlana", sound: "Sounds/Svetlana2Skin.mp3" },
-    { skin: "Skins/RomanSkin.jpg", coinCost: 10000, rebirthCost: undefined, name: "👨‍❤️‍👨Roman", sound: "Sounds/RomanSkin.mp3" },
-    { skin: "Skins/ElenaSkin.jpg", coinCost: 30000, rebirthCost: undefined, name: "🦛Elena", sound: "Sounds/ElenaSkin.mp3" },
-    { skin: "Skins/KirillSkin.jpg", coinCost: 50000, rebirthCost: undefined, name: "🪨Kirill", sound: "Sounds/KirillSkin.mp3" },
-    { skin: "Skins/MatveiSkin.jpg", coinCost: 100000, rebirthCost: undefined, name: "🍖Matvei", sound: "Sounds/MatveiSkin.mp3" },
-    { skin: "Skins/FilipinkoSkin.jpg", coinCost: 200000, rebirthCost: undefined, name: "🎨Fillipinko", sound: "Sounds/FilipinkoSkin.mp3" },
-    { skin: "Skins/SofiaSkin.jpg", coinCost: 350000, rebirthCost: undefined, name: "👑Sofia", sound: "Sounds/SofiaSkin.mp3" },
-    { skin: "Skins/BioSkin.jpg", coinCost: 500000, rebirthCost: undefined, name: "🥑BioAvocado", sound: "Sounds/BioSkin.mp3" },
-    { skin: "Skins/VinogradikSkin.jpg", coinCost: undefined, rebirthCost: 1, name: "🍇Vinogradik", sound: "Sounds/VinogradikSkin.mp3" },
-    { skin: "Skins/LampochkaSkin.jpg", coinCost: undefined, rebirthCost: 2, name: "💡Lampochka", sound: "Sounds/LampochkaSkin.mp3" },
-    { skin: "Skins/WeddingSkin.jpg", coinCost: undefined, rebirthCost: 3, name: "💒Wedding", sound: "Sounds/WeddingSkin.mp3" },
-    { skin: "Skins/JuriSkin.jpg", coinCost: undefined, rebirthCost: 5, name: "🏈Juri", sound: "Sounds/JuriSkin.mp3" },
-    { skin: "Skins/DuraSkin.jpg", coinCost: undefined, rebirthCost: 10, name: "📑Dura", sound: "Sounds/DuraSkin.mp3" },
-    { skin: "Skins/RentikSkin.jpg", coinCost: 10000000, rebirthCost: 15, name: "🚓Rentik", sound: "Sounds/RentikSkin.mp3" },
+    { skin: "Skins/SvetlanaSkin.jpg", coinCost: 0, rebirthCost: 0, name: "🔢Svetlana", sound: "Sounds/SvetlanaSkin.mp3" },
+    { skin: "Skins/LeshaSkin.jpg", coinCost: 1, rebirthCost: 0, name: "😍Lesha", sound: "Sounds/LeshaSkin.mp3" },
+    { skin: "Skins/Lesha2Skin.jpg", coinCost: 2, rebirthCost: 0, name: "👅Lesha2", sound: "Sounds/Lesha2Skin.mp3" },
+    { skin: "Skins/SensovaSkin.jpg", coinCost: 2_000, rebirthCost: 0, name: "🐦Sensova", sound: "Sounds/SensovaSkin.mp3" },
+    { skin: "Skins/Svetlana2Skin.jpg", coinCost: 7_500, rebirthCost: 0, name: "🐐Svetlana Baran", sound: "Sounds/Svetlana2Skin.mp3" },
+    //{ skin: "Skins/Svetlana2Skin.jpg", coinCost: 7_500, rebirthCost: undefined, name: "🍔5 Tonn Svetlana", sound: "Sounds/Svetlana2Skin.mp3" },
+    { skin: "Skins/RomanSkin.jpg", coinCost: 20_000, rebirthCost: 0, name: "👨‍❤️‍👨Roman", sound: "Sounds/RomanSkin.mp3" },
+    { skin: "Skins/ElenaSkin.jpg", coinCost: 50_000, rebirthCost: 0, name: "🦛Elena", sound: "Sounds/ElenaSkin.mp3" },
+    { skin: "Skins/KirillSkin.jpg", coinCost: 90_000, rebirthCost: 0, name: "🪨Kirill", sound: "Sounds/KirillSkin.mp3" },
+    { skin: "Skins/MatveiSkin.jpg", coinCost: 150_000, rebirthCost: 0, name: "🍖Matvei", sound: "Sounds/MatveiSkin.mp3" },
+    { skin: "Skins/FilipinkoSkin.jpg", coinCost: 250_000, rebirthCost: 0, name: "🎨Fillipinko", sound: "Sounds/FilipinkoSkin.mp3" },
+    { skin: "Skins/SofiaSkin.jpg", coinCost: 400_000, rebirthCost: 0, name: "👑Sofia", sound: "Sounds/SofiaSkin.mp3" },
+    { skin: "Skins/BioSkin.jpg", coinCost: 650_000, rebirthCost: 0, name: "🥑BioAvocado", sound: "Sounds/BioSkin.mp3" },
+    { skin: "Skins/VinogradikSkin.jpg", coinCost: 1_000_000, rebirthCost: 1, name: "🍇Vinogradik", sound: "Sounds/VinogradikSkin.mp3" },
+    { skin: "Skins/LampochkaSkin.jpg", coinCost: 2_000_000, rebirthCost: 2, name: "💡Lampochka", sound: "Sounds/LampochkaSkin.mp3" },
+    { skin: "Skins/WeddingSkin.jpg", coinCost: 4_000_000, rebirthCost: 3, name: "💒Wedding", sound: "Sounds/WeddingSkin.mp3" },
+    { skin: "Skins/JuriSkin.jpg", coinCost: 7_000_000, rebirthCost: 4, name: "🏈Juri", sound: "Sounds/JuriSkin.mp3" },
+    { skin: "Skins/DuraSkin.jpg", coinCost: 12_000_000, rebirthCost: 5, name: "📑Dura", sound: "Sounds/DuraSkin.mp3" },
+    { skin: "Skins/RentikSkin.jpg", coinCost: 20_000_000, rebirthCost: 6, name: "🚓Rentik", sound: "Sounds/RentikSkin.mp3" }
 ];
+
 
 let comboTimeout;
 let coinsPerSecInterval;
@@ -391,7 +460,8 @@ function handleActualClick() {
 
     let coinsEarned = gameData.coinsPerClick;
 
-    const rebirthMultiplier = 1 + (gameData.rebirths * 0.5);
+    const rebirthMultiplier = Math.pow(1.12, gameData.rebirths)
+;
     coinsEarned *= rebirthMultiplier;
 
     updateCombo();
@@ -483,7 +553,9 @@ function handleUpgrade(e) {
         gameData.count -= gameData.upgradeCost;
         gameData.upgradeLevel++;
         gameData.coinsPerClick++;
-        gameData.upgradeCost = Math.floor(10 * Math.pow(gameData.upgradeLevel, 2)) || 10;
+        gameData.upgradeCost = Math.floor(
+            25 * Math.pow(1.18, gameData.upgradeLevel)
+        ) || 10;
         performed++;
     }
     if (performed > 0) {
@@ -508,7 +580,9 @@ function handleRebirth(e) {
         gameData.coinsPerSecNonPermanent = 0;
         gameData.rebirths++;
 
-        gameData.rebirthCost = Math.floor(1000000 * Math.pow(2, gameData.rebirths));
+        gameData.rebirthCost = Math.floor(
+            250_000 * Math.pow(1.5, gameData.rebirths)
+        );
         
         gameData.unlockedSkins = [...skinsToKeep];
         if (!gameData.unlockedSkins.includes(0)) {
@@ -599,7 +673,7 @@ function updateShopUI() {
         const itemElement = document.createElement('div');
         itemElement.className = 'shop-item';
 
-        const actualCost = typeof itemTemplate.cost === 'function' ? itemTemplate.cost(gameData) : itemTemplate.cost;
+        const actualCost = typeof itemTemplate.cost === 'function' ? itemTemplate.cost(gameData, shopItem.purchased) : itemTemplate.cost;
         const canAfford = gameData.count >= actualCost;
         const canPurchase = shopItem.purchased < itemTemplate.maxQty;
 
@@ -630,7 +704,7 @@ function updateShopUI() {
 function buyShopItem(index) {
     const shopItem = gameData.shopItems[index];
     const itemTemplate = shopItemsDB[shopItem.dbIndex];
-    const actualCost = typeof itemTemplate.cost === 'function' ? itemTemplate.cost(gameData) : itemTemplate.cost;
+    const actualCost = itemTemplate.cost(gameData, shopItem.purchased);
 
     if (gameData.count >= actualCost && shopItem.purchased < itemTemplate.maxQty) {
         gameData.count -= actualCost;
@@ -775,7 +849,6 @@ function unlockSkin(index) {
             gameData.count -= coinCost;
         }
         if (rebirthCost !== undefined && rebirthCost > 0) {
-            gameData.rebirths -= rebirthCost;
             if (!gameData.skinsBoughtWithRebirths.includes(index)) {
                 gameData.skinsBoughtWithRebirths.push(index);
             }
@@ -854,7 +927,8 @@ function startCoinsPerSec() {
         if (totalCPS > 0) {
             let coinsEarned = totalCPS;
 
-            const rebirthMultiplier = 1 + (gameData.rebirths * 0.5);
+            const rebirthMultiplier = Math.pow(1.12, gameData.rebirths)
+;
             coinsEarned *= rebirthMultiplier;
 
             if (gameData.tempBoosts.coinsPerSec) {
